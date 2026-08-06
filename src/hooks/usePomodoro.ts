@@ -15,6 +15,7 @@ const MODE_SECONDS = (o: Options, mode: PomodoroMode) => {
 }
 
 export function usePomodoro(options: Options) {
+  const { workMinutes, shortBreakMinutes, longBreakMinutes } = options
   const [mode, setMode] = useState<PomodoroMode>('work')
   const [secondsLeft, setSecondsLeft] = useState(() => MODE_SECONDS(options, 'work'))
   const [isRunning, setIsRunning] = useState(false)
@@ -47,13 +48,13 @@ export function usePomodoro(options: Options) {
     setIsRunning(false)
   }, [isRunning, secondsLeft])
 
-  // resync duration when options change (settings page), only while paused
+  // resync duration when settings change, only while paused
   useEffect(() => {
     if (!isRunning) {
       setSecondsLeft(MODE_SECONDS(options, modeRef.current))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options])
+  }, [workMinutes, shortBreakMinutes, longBreakMinutes])
 
   const start = useCallback(() => setIsRunning(true), [])
   const pause = useCallback(() => setIsRunning(false), [])
