@@ -29,12 +29,12 @@ export const COLOR_NAMES: Record<string, string> = {
 }
 
 export const NAV_ITEMS = [
-  { to: '/', label: 'Главная', icon: 'home' },
-  { to: '/schedule', label: 'Расписание', icon: 'calendar' },
-  { to: '/tasks', label: 'Задачи', icon: 'check' },
-  { to: '/deadlines', label: 'Дедлайны', icon: 'alert' },
-  { to: '/notes', label: 'Заметки', icon: 'note' },
-  { to: '/focus', label: 'Фокус', icon: 'timer' },
+  { to: '/', label: 'Главная', icon: '🏠' },
+  { to: '/schedule', label: 'Расписание', icon: '📅' },
+  { to: '/tasks', label: 'Задачи', icon: '✅' },
+  { to: '/deadlines', label: 'Дедлайны', icon: '⏰' },
+  { to: '/notes', label: 'Заметки', icon: '📝' },
+  { to: '/focus', label: 'Фокус', icon: '⏱️' },
 ]
 
 export const STORAGE_KEYS = {
