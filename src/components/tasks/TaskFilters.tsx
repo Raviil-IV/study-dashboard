@@ -28,11 +28,8 @@ function ChipGroup({ options, value, onChange }: { options: { value: string; lab
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-            value === o.value
-              ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
-              : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-          }`}
+          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${value === o.value ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+          aria-pressed={value === o.value}
         >
           {o.label}
         </button>
@@ -49,11 +46,6 @@ export default function TaskFilters({ filters, onChange, subjects }: { filters: 
         <span className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Статус</span>
         <ChipGroup options={STATUS_OPTIONS} value={filters.status} onChange={(status) => set({ status })} />
       </div>
-      <Select label="Статус" value={filters.status} onChange={(e) => set({ status: e.target.value })}>
-        {STATUS_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </Select>
       <div>
         <span className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Приоритет</span>
         <ChipGroup options={PRIORITY_OPTIONS} value={filters.priority} onChange={(priority) => set({ priority })} />

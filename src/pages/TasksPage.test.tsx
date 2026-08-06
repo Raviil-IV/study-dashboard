@@ -64,7 +64,7 @@ describe('TasksPage', () => {
   it('filters by status', async () => {
     const user = userEvent.setup()
     renderPage()
-    await user.selectOptions(screen.getByLabelText('Статус'), 'done')
+    await user.click(screen.getByRole('button', { name: 'Выполнено' }))
     expect(screen.queryByText('Решить задачи')).not.toBeInTheDocument()
     expect(screen.getByText('Прочитать главу')).toBeInTheDocument()
   })
