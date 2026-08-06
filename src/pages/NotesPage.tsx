@@ -32,7 +32,11 @@ export default function NotesPage() {
   }, [notes, query])
 
   const handleSubmit = (values: NoteFormValues) => {
-    const payload = { ...values, pinned: false, tags: values.tags.split(',').map((t) => t.trim()).filter(Boolean) }
+    const payload = {
+      ...values,
+      pinned: editing ? editing.pinned : false,
+      tags: values.tags.split(',').map((t) => t.trim()).filter(Boolean),
+    }
     if (editing) {
       updateNote(editing.id, payload)
     } else {
