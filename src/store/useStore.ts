@@ -1,0 +1,158 @@
+import { create } from 'zustand'
+import { persist, type PersistStorage } from 'zustand/middleware'
+import type { Deadline, FocusSession, Lesson, Note, Settings, Task } from '../types'
+import { DEFAULT_SETTINGS, STORAGE_KEYS } from '../lib/constants'
+import { getDemoData } from '../lib/demoData'
+
+export type TaskInput = Omit<Task, 'id' | 'createdAt'>
+
+export interface StoreState {
+  lessons: Lesson[]
+  tasks: Task[]
+  deadlines: Deadline[]
+  notes: Note[]
+  focusSessions: FocusSession[]
+  settings: Settings
+  addLesson: (input: Omit<Lesson, 'id'>) => void
+  updateLesson: (id: string, patch: Partial<Lesson>) => void
+  removeLesson: (id: string) => void
+  addTask: (input: TaskInput) => void
+  updateTask: (id: string, patch: Partial<Task>) => void
+  removeTask: (id: string) => void
+  toggleTask: (id: string) => void
+  addDeadline: (input: Omit<Deadline, 'id' | 'createdAt'>) => void
+  updateDeadline: (id: string, patch: Partial<Deadline>) => void
+  removeDeadline: (id: string) => void
+  addNote: (input: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => void
+  updateNote: (id: string, patch: Partial<Note>) => void
+  removeNote: (id: string) => void
+  togglePinNote: (id: string) => void
+  addFocusSession: (input: Omit<FocusSession, 'id' | 'startedAt'>) => void
+  updateSettings: (patch: Partial<Settings>) => void
+  resetAll: () => void
+  clearAll: () => void
+}
+
+type PersistedState = Pick<StoreState, 'lessons' | 'tasks' | 'deadlines' | 'notes' | 'focusSessions' | 'settings'>
+
+const keys = STORAGE_KEYS
+
+const emptyState: PersistedState = {
+  lessons: [],
+  tasks: [],
+  deadlines: [],
+  notes: [],
+  focusSessions: [],
+  settings: DEFAULT_SETTINGS,
+}
+
+function seedState(): PersistedState {
+  const d = getDemoData()
+  return { lessons: d.lessons, tasks: d.tasks, deadlines: d.deadlines, notes: d.notes, focusSessions: [], settings: DEFAULT_SETTINGS }
+}
+
+function readStored<T>(key: string): T {
+  return JSON.parse(localStorage.getItem(key) ?? 'null') as T
+}
+
+// Zustand v5 `persist` expects a PersistStorage: getItem returns
+// `{ state, version } | null`, setItem receives the same object. State is
+// stored split per-entity (see STORAGE_KEYS), so this storage fans the
+// umbrella record out into individual localStorage keys and reassembles it.
+const storage: PersistStorage<PersistedState> = {
+  getItem: (name) => {
+    // Umbrella key written by zustand's default JSON storage — read as-is.
+    const raw = localStorage.getItem(name)
+    if (raw) return JSON.parse(raw)
+    // First run: nothing stored anywhere → keep the seeded demo data.
+    if (Object.values(keys).every((k) => localStorage.getItem(k) === null)) return null
+    return {
+      state: {
+        lessons: readStored<Lesson[]>(keys.lessons),
+        tasks: readStored<Task[]>(keys.tasks),
+        deadlines: readStored<Deadline[]>(keys.deadlines),
+        notes: readStored<Note[]>(keys.notes),
+        focusSessions: readStored<FocusSession[]>(keys.focusSessions),
+        settings: readStored<Settings>(keys.settings),
+      },
+      version: 0,
+    }
+  },
+  setItem: (_name, value) => {
+    const s = value.state
+    localStorage.setItem(keys.lessons, JSON.stringify(s.lessons))
+    localStorage.setItem(keys.tasks, JSON.stringify(s.tasks))
+    localStorage.setItem(keys.deadlines, JSON.stringify(s.deadlines))
+    localStorage.setItem(keys.notes, JSON.stringify(s.notes))
+    localStorage.setItem(keys.focusSessions, JSON.stringify(s.focusSessions))
+    localStorage.setItem(keys.settings, JSON.stringify(s.settings))
+  },
+  removeItem: (name) => {
+    localStorage.removeItem(name)
+    Object.values(keys).forEach((k) => localStorage.removeItem(k))
+  },
+}
+
+export const useStore = create<StoreState>()(
+  persist(
+    (set) => ({
+      ...seedState(),
+      settings: DEFAULT_SETTINGS,
+      addLesson: (input) =>
+        set((s) => ({ lessons: [...s.lessons, { ...input, id: crypto.randomUUID() }] })),
+      updateLesson: (id, patch) =>
+        set((s) => ({ lessons: s.lessons.map((l) => (l.id === id ? { ...l, ...patch } : l)) })),
+      removeLesson: (id) => set((s) => ({ lessons: s.lessons.filter((l) => l.id !== id) })),
+      addTask: (input) =>
+        set((s) => ({
+          tasks: [...s.tasks, { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString() }],
+        })),
+      updateTask: (id, patch) =>
+        set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
+      removeTask: (id) => set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
+      toggleTask: (id) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) =>
+            t.id === id
+              ? t.status === 'done'
+                ? { ...t, status: 'todo' as const, completedAt: undefined }
+                : { ...t, status: 'done' as const, completedAt: new Date().toISOString() }
+              : t,
+          ),
+        })),
+      addDeadline: (input) =>
+        set((s) => ({ deadlines: [...s.deadlines, { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString() }] })),
+      updateDeadline: (id, patch) =>
+        set((s) => ({ deadlines: s.deadlines.map((d) => (d.id === id ? { ...d, ...patch } : d)) })),
+      removeDeadline: (id) => set((s) => ({ deadlines: s.deadlines.filter((d) => d.id !== id) })),
+      addNote: (input) =>
+        set((s) => ({ notes: [...s.notes, { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }] })),
+      updateNote: (id, patch) =>
+        set((s) => ({
+          notes: s.notes.map((n) =>
+            n.id === id ? { ...n, ...patch, updatedAt: new Date().toISOString() } : n,
+          ),
+        })),
+      removeNote: (id) => set((s) => ({ notes: s.notes.filter((n) => n.id !== id) })),
+      togglePinNote: (id) =>
+        set((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n)) })),
+      addFocusSession: (input) =>
+        set((s) => ({ focusSessions: [...s.focusSessions, { ...input, id: crypto.randomUUID(), startedAt: new Date().toISOString() }] })),
+      updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
+      resetAll: () => set(() => ({ ...seedState(), settings: DEFAULT_SETTINGS })),
+      clearAll: () => set(() => ({ ...emptyState, settings: DEFAULT_SETTINGS })),
+    }),
+    {
+      name: 'study-dashboard',
+      partialize: (state): PersistedState => ({
+        lessons: state.lessons,
+        tasks: state.tasks,
+        deadlines: state.deadlines,
+        notes: state.notes,
+        focusSessions: state.focusSessions,
+        settings: state.settings,
+      }),
+      storage,
+    },
+  ),
+)
