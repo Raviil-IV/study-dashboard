@@ -43,9 +43,13 @@ export function currentWeekMonday(): Date {
   return monday
 }
 
-export function isLessonNow(lesson: { weekday: number; startTime: string; endTime: string }): boolean {
-  if (lesson.weekday !== new Date().getDay()) return false
+export function isLessonNow(lesson: { type?: 'weekly' | 'once'; date?: string; weekday: number; startTime: string; endTime: string }): boolean {
   const now = new Date()
+  if (lesson.type === 'once') {
+    if (lesson.date !== toISODate(now)) return false
+  } else if (lesson.weekday !== now.getDay()) {
+    return false
+  }
   const minutes = now.getHours() * 60 + now.getMinutes()
   const [sh, sm] = lesson.startTime.split(':').map(Number)
   const [eh, em] = lesson.endTime.split(':').map(Number)
@@ -63,7 +67,13 @@ export function nextLesson(lessons: Lesson[]): Lesson | null {
   for (const lesson of lessons) {
     const [h, m] = lesson.startTime.split(':').map(Number)
     const start = h * 60 + m
-    const diffDays = (lesson.weekday - today + 7) % 7
+    let diffDays: number
+    if (lesson.type === 'once') {
+      if (lesson.date && lesson.date < toISODate(now)) continue
+      diffDays = lesson.date ? daysUntil(lesson.date) : (lesson.weekday - today + 7) % 7
+    } else {
+      diffDays = (lesson.weekday - today + 7) % 7
+    }
     let key: number
     if (diffDays === 0 && start <= nowMinutes) {
       key = 7 * 1440 + start

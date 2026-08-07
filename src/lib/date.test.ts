@@ -61,4 +61,20 @@ describe('date utils', () => {
     const next = nextLesson(lessons)
     expect(next?.id).toBe('2')
   })
+
+  it('isLessonNow considers a one-off lesson only on its date', () => {
+    const today = { type: 'once', date: '2026-08-06', weekday: 4, startTime: '11:00', endTime: '13:00' } as const
+    expect(isLessonNow(today)).toBe(true)
+    const otherDay = { type: 'once', date: '2026-08-07', weekday: 5, startTime: '11:00', endTime: '13:00' } as const
+    expect(isLessonNow(otherDay)).toBe(false)
+  })
+
+  it('nextLesson skips past one-off lessons and orders by date', () => {
+    const lessons = [
+      { id: '1', type: 'once', title: 'Старое', weekday: 4, startTime: '09:00', endTime: '10:00', date: '2026-08-05' },
+      { id: '2', type: 'once', title: 'Завтра', weekday: 5, startTime: '10:00', endTime: '11:00', date: '2026-08-07' },
+    ] as Lesson[]
+    const next = nextLesson(lessons)
+    expect(next?.id).toBe('2')
+  })
 })
