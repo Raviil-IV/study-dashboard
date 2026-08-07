@@ -65,6 +65,18 @@ describe('MinesweeperPage', () => {
     expect(useStore.getState().gameRecords.minesweeper.easy).toBe(0)
   })
 
+  it('closes the result modal without reopening it', () => {
+    render(
+      <MemoryRouter>
+        <MinesweeperPage />
+      </MemoryRouter>,
+    )
+    fireEvent.click(screen.getByTestId('mine-cell-40')) // flood → win
+    expect(screen.getByText('Победа! 🎉')).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Закрыть' })[0])
+    expect(screen.queryByText('Победа! 🎉')).not.toBeInTheDocument()
+  })
+
   it('switches difficulty and resets the field', () => {
     render(
       <MemoryRouter>

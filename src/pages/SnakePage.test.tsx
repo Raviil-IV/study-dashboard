@@ -89,6 +89,21 @@ describe('SnakePage', () => {
     expect(screen.getByTestId('snake-cell-8-7')).toBeInTheDocument() // one tick to the right
   })
 
+  it('closes the result modal without reopening it', () => {
+    render(
+      <MemoryRouter>
+        <SnakePage />
+      </MemoryRouter>,
+    )
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+    act(() => {
+      vi.advanceTimersByTime(150 * 8) // wall collision
+    })
+    expect(screen.getByText('Игра окончена 💀')).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Закрыть' })[0])
+    expect(screen.queryByText('Игра окончена 💀')).not.toBeInTheDocument()
+  })
+
   it('restarts the game after game over', () => {
     render(
       <MemoryRouter>

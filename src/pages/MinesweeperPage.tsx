@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import PageHeader from '../components/ui/PageHeader'
@@ -17,8 +17,10 @@ export default function MinesweeperPage() {
   const [started, setStarted] = useState(false)
   const [seconds, setSeconds] = useState(0)
   const [result, setResult] = useState<{ seconds: number; isRecord: boolean; won: boolean } | null>(null)
+  const resultHandledRef = useRef(false)
 
   const resetGame = (d: GameDifficulty) => {
+    resultHandledRef.current = false
     const level = MINESWEEPER_LEVELS[d]
     setDifficulty(d)
     setGame(createMinesweeper(level.rows, level.cols, level.mines))
@@ -35,9 +37,10 @@ export default function MinesweeperPage() {
     return () => clearInterval(id)
   }, [started, result])
 
-  // end of game — submit record on win
+  // end of game — submit record on win once (guard: effect re-runs when result clears)
   useEffect(() => {
-    if (!game.gameOver || result) return
+    if (!game.gameOver || resultHandledRef.current) return
+    resultHandledRef.current = true
     if (game.won) {
       const isRecord = submitGameRecord('minesweeper', difficulty, seconds)
       setResult({ seconds, isRecord, won: true })

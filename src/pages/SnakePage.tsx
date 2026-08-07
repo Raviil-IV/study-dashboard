@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import PageHeader from '../components/ui/PageHeader'
@@ -24,8 +24,10 @@ export default function SnakePage() {
   const [paused, setPaused] = useState(false)
   const [seconds, setSeconds] = useState(0)
   const [result, setResult] = useState<{ score: number; seconds: number; isRecord: boolean } | null>(null)
+  const resultHandledRef = useRef(false)
 
   const resetGame = (d: GameDifficulty) => {
+    resultHandledRef.current = false
     setDifficulty(d)
     setGame(createSnakeGame(SNAKE_SIZE))
     setStarted(false)
@@ -61,9 +63,10 @@ export default function SnakePage() {
     return () => clearInterval(id)
   }, [started, paused, result])
 
-  // end of game — submit record once
+  // end of game — submit record once (guard: effect re-runs when result clears)
   useEffect(() => {
-    if (!game.gameOver || result) return
+    if (!game.gameOver || resultHandledRef.current) return
+    resultHandledRef.current = true
     const isRecord = submitGameRecord('snake', difficulty, game.score)
     setResult({ score: game.score, seconds, isRecord })
     // eslint-disable-next-line react-hooks/exhaustive-deps
