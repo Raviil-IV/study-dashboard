@@ -72,6 +72,43 @@ describe('useStore', () => {
     expect(useStore.getState().lessons).toEqual([])
     expect(useStore.getState().tasks).toEqual([])
   })
+
+  it('stores the first game record and returns true', () => {
+    const { submitGameRecord } = useStore.getState()
+    expect(submitGameRecord('memory', 'easy', 12)).toBe(true)
+    expect(useStore.getState().gameRecords.memory.easy).toBe(12)
+  })
+
+  it('does not replace a record with a worse value (memory = fewer is better)', () => {
+    const { submitGameRecord } = useStore.getState()
+    submitGameRecord('memory', 'easy', 12)
+    expect(submitGameRecord('memory', 'easy', 20)).toBe(false)
+    expect(useStore.getState().gameRecords.memory.easy).toBe(12)
+  })
+
+  it('replaces a record with a better value (memory = fewer is better)', () => {
+    const { submitGameRecord } = useStore.getState()
+    submitGameRecord('memory', 'easy', 12)
+    expect(submitGameRecord('memory', 'easy', 8)).toBe(true)
+    expect(useStore.getState().gameRecords.memory.easy).toBe(8)
+  })
+
+  it('treats snake as higher-is-better', () => {
+    const { submitGameRecord } = useStore.getState()
+    submitGameRecord('snake', 'medium', 10)
+    expect(submitGameRecord('snake', 'medium', 8)).toBe(false)
+    expect(useStore.getState().gameRecords.snake.medium).toBe(10)
+    expect(submitGameRecord('snake', 'medium', 15)).toBe(true)
+    expect(useStore.getState().gameRecords.snake.medium).toBe(15)
+  })
+
+  it('keeps records per difficulty separate', () => {
+    const { submitGameRecord } = useStore.getState()
+    submitGameRecord('minesweeper', 'easy', 30)
+    submitGameRecord('minesweeper', 'hard', 120)
+    expect(useStore.getState().gameRecords.minesweeper.easy).toBe(30)
+    expect(useStore.getState().gameRecords.minesweeper.hard).toBe(120)
+  })
 })
 
 afterEach(() => {
