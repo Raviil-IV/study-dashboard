@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { persist, type PersistStorage } from 'zustand/middleware'
 import type { Deadline, FocusSession, Lesson, Note, Settings, Task } from '../types'
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from '../lib/constants'
+import type { GameId, GameDifficulty, GameRecord } from '../lib/games/types'
+import { EMPTY_GAME_RECORDS } from '../lib/games/types'
 import { getDemoData } from '../lib/demoData'
 import { loadFromStorage } from '../lib/storage'
 import { currentWeekMonday, toISODate } from '../lib/date'
@@ -32,11 +34,13 @@ export interface StoreState {
   togglePinNote: (id: string) => void
   addFocusSession: (input: Omit<FocusSession, 'id' | 'startedAt'>) => void
   updateSettings: (patch: Partial<Settings>) => void
+  gameRecords: GameRecord
+  submitGameRecord: (game: GameId, difficulty: GameDifficulty, value: number) => boolean
   resetAll: () => void
   clearAll: () => void
 }
 
-type PersistedState = Pick<StoreState, 'lessons' | 'tasks' | 'deadlines' | 'notes' | 'focusSessions' | 'settings'>
+type PersistedState = Pick<StoreState, 'lessons' | 'tasks' | 'deadlines' | 'notes' | 'focusSessions' | 'settings' | 'gameRecords'>
 
 // Legacy records lack `type`; one-off lessons from a previous calendar week are dropped.
 function migrateState(state: PersistedState): PersistedState {
@@ -58,11 +62,12 @@ const emptyState: PersistedState = {
   notes: [],
   focusSessions: [],
   settings: DEFAULT_SETTINGS,
+  gameRecords: EMPTY_GAME_RECORDS,
 }
 
 function seedState(): PersistedState {
   const d = getDemoData()
-  return { lessons: d.lessons, tasks: d.tasks, deadlines: d.deadlines, notes: d.notes, focusSessions: [], settings: DEFAULT_SETTINGS }
+  return { lessons: d.lessons, tasks: d.tasks, deadlines: d.deadlines, notes: d.notes, focusSessions: [], settings: DEFAULT_SETTINGS, gameRecords: EMPTY_GAME_RECORDS }
 }
 
 // Zustand v5 `persist` expects a PersistStorage: getItem returns
@@ -87,6 +92,7 @@ const storage: PersistStorage<PersistedState> = {
         notes: loadFromStorage<Note[]>(keys.notes, []),
         focusSessions: loadFromStorage<FocusSession[]>(keys.focusSessions, []),
         settings: loadFromStorage<Settings>(keys.settings, DEFAULT_SETTINGS),
+        gameRecords: loadFromStorage<GameRecord>(keys.gameRecords, EMPTY_GAME_RECORDS),
       }),
       version: 0,
     }
@@ -99,6 +105,7 @@ const storage: PersistStorage<PersistedState> = {
     localStorage.setItem(keys.notes, JSON.stringify(s.notes))
     localStorage.setItem(keys.focusSessions, JSON.stringify(s.focusSessions))
     localStorage.setItem(keys.settings, JSON.stringify(s.settings))
+    localStorage.setItem(keys.gameRecords, JSON.stringify(s.gameRecords))
   },
   removeItem: (name) => {
     localStorage.removeItem(name)
@@ -152,6 +159,22 @@ export const useStore = create<StoreState>()(
       addFocusSession: (input) =>
         set((s) => ({ focusSessions: [...s.focusSessions, { ...input, id: uid(), startedAt: new Date().toISOString() }] })),
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
+      submitGameRecord: (game, difficulty, value) => {
+        let isRecord = false
+        set((s) => {
+          const current = s.gameRecords[game]?.[difficulty]
+          const isBetter = current === undefined || (game === 'snake' ? value > current : value < current)
+          if (!isBetter) return {}
+          isRecord = true
+          return {
+            gameRecords: {
+              ...s.gameRecords,
+              [game]: { ...s.gameRecords[game], [difficulty]: value },
+            },
+          }
+        })
+        return isRecord
+      },
       resetAll: () => set(() => ({ ...seedState(), settings: DEFAULT_SETTINGS })),
       clearAll: () => set(() => ({ ...emptyState, settings: DEFAULT_SETTINGS })),
     }),
@@ -164,6 +187,7 @@ export const useStore = create<StoreState>()(
         notes: state.notes,
         focusSessions: state.focusSessions,
         settings: state.settings,
+        gameRecords: state.gameRecords,
       }),
       storage,
     },

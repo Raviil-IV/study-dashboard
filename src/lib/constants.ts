@@ -35,6 +35,7 @@ export const NAV_ITEMS = [
   { to: '/deadlines', label: 'Дедлайны', icon: '⏰' },
   { to: '/notes', label: 'Заметки', icon: '📝' },
   { to: '/focus', label: 'Фокус', icon: '⏱️' },
+  { to: '/games', label: 'Игры', icon: '🎮' },
 ]
 
 export const STORAGE_KEYS = {
@@ -44,6 +45,7 @@ export const STORAGE_KEYS = {
   notes: 'study-dashboard:notes',
   focusSessions: 'study-dashboard:focus-sessions',
   settings: 'study-dashboard:settings',
+  gameRecords: 'study-dashboard:game-records',
 }
 
 export const DEFAULT_SETTINGS: Settings = {
