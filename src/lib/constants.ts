@@ -35,6 +35,7 @@ export const NAV_ITEMS = [
   { to: '/deadlines', label: 'Дедлайны', icon: '⏰' },
   { to: '/notes', label: 'Заметки', icon: '📝' },
   { to: '/focus', label: 'Фокус', icon: '⏱️' },
+  { to: '/games', label: 'Игры', icon: '🎮' },
 ]
 
 export const STORAGE_KEYS = {
