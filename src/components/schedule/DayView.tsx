@@ -5,7 +5,7 @@ import LessonCard from './LessonCard'
 export default function DayView({ lessons, date, onEdit, onDelete }: { lessons: Lesson[]; date: Date; onEdit: (l: Lesson) => void; onDelete: (id: string) => void }) {
   const today = new Date()
   const dayLessons = lessons
-    .filter((l) => l.weekday === date.getDay())
+    .filter((l) => (l.type === 'once' ? l.date === toISODate(date) : l.weekday === date.getDay()))
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
   return (
     <div className="space-y-3">

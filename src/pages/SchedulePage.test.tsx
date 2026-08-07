@@ -77,6 +77,24 @@ describe('SchedulePage', () => {
     expect(screen.getByText('Выберите дату')).toBeInTheDocument()
   })
 
+  it('shows a one-off lesson only on its own date in day view', () => {
+    useStore.setState({ lessons: [{ id: '2', type: 'once', title: 'Семинар', weekday: 4, startTime: '13:00', endTime: '14:00', date: '2026-08-06' }] })
+    renderPage()
+    expect(screen.getByText('Семинар')).toBeInTheDocument()
+  })
+
+  it('adds edit and delete actions to week view cards', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Неделя' }))
+    await user.click(screen.getByRole('button', { name: 'Редактировать' }))
+    expect(screen.getByText('Редактировать занятие')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Закрыть' }))
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    await user.click(screen.getByRole('button', { name: 'Удалить' }))
+    expect(useStore.getState().lessons).toHaveLength(0)
+  })
+
   it('validates end time after start time', async () => {
     const user = userEvent.setup()
     renderPage()

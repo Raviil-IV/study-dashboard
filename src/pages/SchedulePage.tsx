@@ -66,7 +66,7 @@ export default function SchedulePage() {
       {view === 'day' ? (
         <DayView lessons={lessons} date={new Date()} onEdit={openEdit} onDelete={handleDelete} />
       ) : (
-        <WeekView lessons={lessons} />
+        <WeekView lessons={lessons} onEdit={openEdit} onDelete={handleDelete} />
       )}
       <Modal open={modalOpen} title={editing ? 'Редактировать занятие' : 'Новое занятие'} onClose={() => setModalOpen(false)}>
         <LessonForm

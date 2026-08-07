@@ -1,10 +1,11 @@
 import type { Lesson } from '../../types'
 import { toISODate } from '../../lib/date'
 import { WEEKDAYS_SHORT, COLOR_CLASSES } from '../../lib/constants'
+import IconButton from '../ui/IconButton'
 
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
-export default function WeekView({ lessons }: { lessons: Lesson[] }) {
+export default function WeekView({ lessons, onEdit, onDelete }: { lessons: Lesson[]; onEdit: (l: Lesson) => void; onDelete: (id: string) => void }) {
   const today = new Date()
   const monday = new Date(today)
   monday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
@@ -15,7 +16,7 @@ export default function WeekView({ lessons }: { lessons: Lesson[] }) {
         date.setDate(monday.getDate() + i)
         const isToday = toISODate(date) === toISODate(today)
         const dayLessons = lessons
-          .filter((l) => l.weekday === weekday)
+          .filter((l) => (l.type === 'once' ? l.date === toISODate(date) : l.weekday === weekday))
           .sort((a, b) => a.startTime.localeCompare(b.startTime))
         return (
           <div
@@ -36,6 +37,10 @@ export default function WeekView({ lessons }: { lessons: Lesson[] }) {
                     <div className="flex items-center gap-1.5">
                       {l.color && <span className={`h-2 w-2 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
                       <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200">{l.title}</p>
+                      <span className="ml-auto flex shrink-0">
+                        <IconButton name="edit" label="Редактировать" onClick={() => onEdit(l)} />
+                        <IconButton name="trash" label="Удалить" onClick={() => onDelete(l.id)} />
+                      </span>
                     </div>
                     <p className="text-[11px] text-gray-500 dark:text-gray-400">{l.startTime}–{l.endTime}</p>
                   </div>
