@@ -3,6 +3,8 @@ import { persist, type PersistStorage } from 'zustand/middleware'
 import type { Deadline, FocusSession, Lesson, Note, Settings, Task } from '../types'
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from '../lib/constants'
 import { getDemoData } from '../lib/demoData'
+import { loadFromStorage } from '../lib/storage'
+import { uid } from '../lib/id'
 
 export type TaskInput = Omit<Task, 'id' | 'createdAt'>
 
@@ -51,10 +53,6 @@ function seedState(): PersistedState {
   return { lessons: d.lessons, tasks: d.tasks, deadlines: d.deadlines, notes: d.notes, focusSessions: [], settings: DEFAULT_SETTINGS }
 }
 
-function readStored<T>(key: string): T {
-  return JSON.parse(localStorage.getItem(key) ?? 'null') as T
-}
-
 // Zustand v5 `persist` expects a PersistStorage: getItem returns
 // `{ state, version } | null`, setItem receives the same object. State is
 // stored split per-entity (see STORAGE_KEYS), so this storage fans the
@@ -68,12 +66,12 @@ const storage: PersistStorage<PersistedState> = {
     if (Object.values(keys).every((k) => localStorage.getItem(k) === null)) return null
     return {
       state: {
-        lessons: readStored<Lesson[]>(keys.lessons),
-        tasks: readStored<Task[]>(keys.tasks),
-        deadlines: readStored<Deadline[]>(keys.deadlines),
-        notes: readStored<Note[]>(keys.notes),
-        focusSessions: readStored<FocusSession[]>(keys.focusSessions),
-        settings: readStored<Settings>(keys.settings),
+        lessons: loadFromStorage<Lesson[]>(keys.lessons, []),
+        tasks: loadFromStorage<Task[]>(keys.tasks, []),
+        deadlines: loadFromStorage<Deadline[]>(keys.deadlines, []),
+        notes: loadFromStorage<Note[]>(keys.notes, []),
+        focusSessions: loadFromStorage<FocusSession[]>(keys.focusSessions, []),
+        settings: loadFromStorage<Settings>(keys.settings, DEFAULT_SETTINGS),
       },
       version: 0,
     }
@@ -99,13 +97,13 @@ export const useStore = create<StoreState>()(
       ...seedState(),
       settings: DEFAULT_SETTINGS,
       addLesson: (input) =>
-        set((s) => ({ lessons: [...s.lessons, { ...input, id: crypto.randomUUID() }] })),
+        set((s) => ({ lessons: [...s.lessons, { ...input, id: uid() }] })),
       updateLesson: (id, patch) =>
         set((s) => ({ lessons: s.lessons.map((l) => (l.id === id ? { ...l, ...patch } : l)) })),
       removeLesson: (id) => set((s) => ({ lessons: s.lessons.filter((l) => l.id !== id) })),
       addTask: (input) =>
         set((s) => ({
-          tasks: [...s.tasks, { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString() }],
+          tasks: [...s.tasks, { ...input, id: uid(), createdAt: new Date().toISOString() }],
         })),
       updateTask: (id, patch) =>
         set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) })),
@@ -121,12 +119,12 @@ export const useStore = create<StoreState>()(
           ),
         })),
       addDeadline: (input) =>
-        set((s) => ({ deadlines: [...s.deadlines, { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString() }] })),
+        set((s) => ({ deadlines: [...s.deadlines, { ...input, id: uid(), createdAt: new Date().toISOString() }] })),
       updateDeadline: (id, patch) =>
         set((s) => ({ deadlines: s.deadlines.map((d) => (d.id === id ? { ...d, ...patch } : d)) })),
       removeDeadline: (id) => set((s) => ({ deadlines: s.deadlines.filter((d) => d.id !== id) })),
       addNote: (input) =>
-        set((s) => ({ notes: [...s.notes, { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }] })),
+        set((s) => ({ notes: [...s.notes, { ...input, id: uid(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }] })),
       updateNote: (id, patch) =>
         set((s) => ({
           notes: s.notes.map((n) =>
@@ -137,7 +135,7 @@ export const useStore = create<StoreState>()(
       togglePinNote: (id) =>
         set((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n)) })),
       addFocusSession: (input) =>
-        set((s) => ({ focusSessions: [...s.focusSessions, { ...input, id: crypto.randomUUID(), startedAt: new Date().toISOString() }] })),
+        set((s) => ({ focusSessions: [...s.focusSessions, { ...input, id: uid(), startedAt: new Date().toISOString() }] })),
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
       resetAll: () => set(() => ({ ...seedState(), settings: DEFAULT_SETTINGS })),
       clearAll: () => set(() => ({ ...emptyState, settings: DEFAULT_SETTINGS })),

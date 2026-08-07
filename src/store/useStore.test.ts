@@ -46,4 +46,12 @@ describe('useStore', () => {
     clearAll()
     expect(useStore.getState().tasks).toHaveLength(0)
   })
+
+  it('falls back to empty collections when stored JSON is corrupt', async () => {
+    localStorage.setItem('study-dashboard:lessons', '{not json')
+    localStorage.setItem('study-dashboard:tasks', '{not json')
+    await useStore.persist.rehydrate()
+    expect(useStore.getState().lessons).toEqual([])
+    expect(useStore.getState().tasks).toEqual([])
+  })
 })
