@@ -29,3 +29,5 @@ export const MINESWEEPER_LEVELS: Record<GameDifficulty, { rows: number; cols: nu
 }
 
 export type GameRecord = Record<GameId, Partial<Record<GameDifficulty, number>>>
+
+export const EMPTY_GAME_RECORDS: GameRecord = { memory: {}, snake: {}, minesweeper: {} }

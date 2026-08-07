@@ -57,7 +57,7 @@ describe('snake', () => {
     const head = g.snake[0]
     g = {
       ...g,
-      snake: g.snake.map((p, i) => ({ x: 9 - i, y: head.y })),
+      snake: g.snake.map((_, i) => ({ x: 9 - i, y: head.y })),
       direction: 'right',
       food: null,
     }

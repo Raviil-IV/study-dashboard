@@ -3,6 +3,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import SnakePage from './SnakePage'
 import { useStore } from '../store/useStore'
+import { EMPTY_GAME_RECORDS } from '../lib/games/types'
 
 const RESET_STATE = {
   lessons: [],
@@ -11,7 +12,7 @@ const RESET_STATE = {
   notes: [],
   focusSessions: [],
   settings: { theme: 'system' as const, pomodoroWorkMinutes: 25, pomodoroShortBreakMinutes: 5, pomodoroLongBreakMinutes: 15 },
-  gameRecords: {},
+  gameRecords: EMPTY_GAME_RECORDS,
 }
 
 beforeEach(() => {

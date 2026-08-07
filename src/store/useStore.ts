@@ -3,6 +3,7 @@ import { persist, type PersistStorage } from 'zustand/middleware'
 import type { Deadline, FocusSession, Lesson, Note, Settings, Task } from '../types'
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from '../lib/constants'
 import type { GameId, GameDifficulty, GameRecord } from '../lib/games/types'
+import { EMPTY_GAME_RECORDS } from '../lib/games/types'
 import { getDemoData } from '../lib/demoData'
 import { loadFromStorage } from '../lib/storage'
 import { currentWeekMonday, toISODate } from '../lib/date'
@@ -61,12 +62,12 @@ const emptyState: PersistedState = {
   notes: [],
   focusSessions: [],
   settings: DEFAULT_SETTINGS,
-  gameRecords: {},
+  gameRecords: EMPTY_GAME_RECORDS,
 }
 
 function seedState(): PersistedState {
   const d = getDemoData()
-  return { lessons: d.lessons, tasks: d.tasks, deadlines: d.deadlines, notes: d.notes, focusSessions: [], settings: DEFAULT_SETTINGS, gameRecords: {} }
+  return { lessons: d.lessons, tasks: d.tasks, deadlines: d.deadlines, notes: d.notes, focusSessions: [], settings: DEFAULT_SETTINGS, gameRecords: EMPTY_GAME_RECORDS }
 }
 
 // Zustand v5 `persist` expects a PersistStorage: getItem returns
@@ -91,7 +92,7 @@ const storage: PersistStorage<PersistedState> = {
         notes: loadFromStorage<Note[]>(keys.notes, []),
         focusSessions: loadFromStorage<FocusSession[]>(keys.focusSessions, []),
         settings: loadFromStorage<Settings>(keys.settings, DEFAULT_SETTINGS),
-        gameRecords: loadFromStorage<GameRecord>(keys.gameRecords, {}),
+        gameRecords: loadFromStorage<GameRecord>(keys.gameRecords, EMPTY_GAME_RECORDS),
       }),
       version: 0,
     }
