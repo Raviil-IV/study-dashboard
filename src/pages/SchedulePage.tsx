@@ -30,10 +30,11 @@ export default function SchedulePage() {
     setModalOpen(true)
   }
   const handleSubmit = (values: LessonFormValues) => {
+    const lesson = { ...values, date: values.date || undefined }
     if (editing) {
-      updateLesson(editing.id, values)
+      updateLesson(editing.id, lesson)
     } else {
-      addLesson({ ...values, type: 'weekly' })
+      addLesson(lesson)
     }
     setModalOpen(false)
   }

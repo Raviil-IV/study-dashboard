@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import SchedulePage from './SchedulePage'
@@ -50,6 +50,31 @@ describe('SchedulePage', () => {
     expect(useStore.getState().lessons).toHaveLength(2)
     expect(useStore.getState().lessons[1].title).toBe('Физика')
     expect(screen.getByText('Физика')).toBeInTheDocument()
+  })
+
+  it('adds a one-off lesson on a specific date', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Добавить занятие' }))
+    await user.type(screen.getByLabelText('Название'), 'Консультация')
+    await user.click(screen.getByRole('radio', { name: 'На конкретную дату' }))
+    fireEvent.change(screen.getByLabelText('Дата'), { target: { value: '2026-08-07' } })
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+    const added = useStore.getState().lessons[1]
+    expect(added.type).toBe('once')
+    expect(added.date).toBe('2026-08-07')
+    expect(added.weekday).toBe(5) // Friday
+  })
+
+  it('requires a date for one-off lessons', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Добавить занятие' }))
+    await user.type(screen.getByLabelText('Название'), 'Консультация')
+    await user.click(screen.getByRole('radio', { name: 'На конкретную дату' }))
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+    expect(useStore.getState().lessons).toHaveLength(1)
+    expect(screen.getByText('Выберите дату')).toBeInTheDocument()
   })
 
   it('validates end time after start time', async () => {

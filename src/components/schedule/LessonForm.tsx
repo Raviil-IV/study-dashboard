@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import type { Lesson } from '../../types'
 import { WEEKDAYS, SUBJECT_COLORS, COLOR_NAMES } from '../../lib/constants'
+import { toISODate } from '../../lib/date'
 import Input from '../ui/Input'
 import Select from '../ui/Select'
 import Button from '../ui/Button'
@@ -13,6 +14,8 @@ export interface LessonFormValues {
   location: string
   note: string
   color: string
+  type: 'weekly' | 'once'
+  date: string
 }
 
 const DEFAULT_VALUES: LessonFormValues = {
@@ -23,6 +26,8 @@ const DEFAULT_VALUES: LessonFormValues = {
   location: '',
   note: '',
   color: 'blue',
+  type: 'weekly',
+  date: '',
 }
 
 export default function LessonForm({ initial, onSubmit, onCancel }: { initial?: Lesson; onSubmit: (values: LessonFormValues) => void; onCancel: () => void }) {
@@ -36,6 +41,8 @@ export default function LessonForm({ initial, onSubmit, onCancel }: { initial?: 
           location: initial.location ?? '',
           note: initial.note ?? '',
           color: initial.color ?? 'blue',
+          type: initial.type ?? 'weekly',
+          date: initial.date ?? '',
         }
       : DEFAULT_VALUES,
   )
@@ -51,18 +58,42 @@ export default function LessonForm({ initial, onSubmit, onCancel }: { initial?: 
       setError('Время конца должно быть позже времени начала')
       return
     }
-    onSubmit(values)
+    if (values.type === 'once' && !values.date) {
+      setError('Выберите дату')
+      return
+    }
+    onSubmit({
+      ...values,
+      weekday: values.type === 'once' && values.date ? new Date(values.date).getDay() : values.weekday,
+    })
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <fieldset>
+        <legend className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Тип занятия</legend>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input type="radio" name="lessonType" checked={values.type === 'weekly'} onChange={() => setValues({ ...values, type: 'weekly' })} />
+            Регулярное (каждую неделю)
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+            <input type="radio" name="lessonType" checked={values.type === 'once'} onChange={() => setValues({ ...values, type: 'once' })} />
+            На конкретную дату
+          </label>
+        </div>
+      </fieldset>
       <Input label="Название" value={values.title} onChange={(e) => setValues({ ...values, title: e.target.value })} placeholder="Например: Математика" />
       <div className="grid grid-cols-2 gap-4">
-        <Select label="День недели" value={String(values.weekday)} onChange={(e) => setValues({ ...values, weekday: Number(e.target.value) })}>
-          {WEEKDAYS.map((day, i) => (
-            <option key={i} value={i}>{day}</option>
-          ))}
-        </Select>
+        {values.type === 'once' ? (
+          <Input label="Дата" type="date" min={toISODate(new Date())} value={values.date} onChange={(e) => setValues({ ...values, date: e.target.value })} />
+        ) : (
+          <Select label="День недели" value={String(values.weekday)} onChange={(e) => setValues({ ...values, weekday: Number(e.target.value) })}>
+            {WEEKDAYS.map((day, i) => (
+              <option key={i} value={i}>{day}</option>
+            ))}
+          </Select>
+        )}
         <Select label="Цвет" value={values.color} onChange={(e) => setValues({ ...values, color: e.target.value })}>
           {SUBJECT_COLORS.map((c) => (
             <option key={c} value={c}>{COLOR_NAMES[c]}</option>
