@@ -36,6 +36,13 @@ export function getTodayWeekday(): number {
   return new Date().getDay()
 }
 
+export function currentWeekMonday(): Date {
+  const today = new Date()
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
+  return monday
+}
+
 export function isLessonNow(lesson: { weekday: number; startTime: string; endTime: string }): boolean {
   if (lesson.weekday !== new Date().getDay()) return false
   const now = new Date()

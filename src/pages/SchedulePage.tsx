@@ -33,7 +33,7 @@ export default function SchedulePage() {
     if (editing) {
       updateLesson(editing.id, values)
     } else {
-      addLesson(values)
+      addLesson({ ...values, type: 'weekly' })
     }
     setModalOpen(false)
   }

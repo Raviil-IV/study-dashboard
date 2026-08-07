@@ -12,12 +12,12 @@ function isoDaysFromNow(days: number): string {
 export function getDemoData(): { lessons: Lesson[]; tasks: Task[]; deadlines: Deadline[]; notes: Note[] } {
   return {
     lessons: [
-      { id: uid(), title: 'Математика', weekday: 1, startTime: '08:30', endTime: '10:00', location: 'Каб. 201', color: 'blue' },
-      { id: uid(), title: 'Физика', weekday: 1, startTime: '10:15', endTime: '11:45', location: 'Каб. 305', color: 'purple' },
-      { id: uid(), title: 'Английский', weekday: 2, startTime: '09:00', endTime: '10:30', location: 'Каб. 112', color: 'pink' },
-      { id: uid(), title: 'История', weekday: 3, startTime: '12:00', endTime: '13:30', location: 'Каб. 45', color: 'orange' },
-      { id: uid(), title: 'Информатика', weekday: 4, startTime: '14:00', endTime: '15:30', location: 'Каб. 218', color: 'teal' },
-      { id: uid(), title: 'Химия', weekday: 5, startTime: '08:30', endTime: '10:00', location: 'Каб. 402', color: 'green' },
+      { id: uid(), title: 'Математика', type: 'weekly', weekday: 1, startTime: '08:30', endTime: '10:00', location: 'Каб. 201', color: 'blue' },
+      { id: uid(), title: 'Физика', type: 'weekly', weekday: 1, startTime: '10:15', endTime: '11:45', location: 'Каб. 305', color: 'purple' },
+      { id: uid(), title: 'Английский', type: 'weekly', weekday: 2, startTime: '09:00', endTime: '10:30', location: 'Каб. 112', color: 'pink' },
+      { id: uid(), title: 'История', type: 'weekly', weekday: 3, startTime: '12:00', endTime: '13:30', location: 'Каб. 45', color: 'orange' },
+      { id: uid(), title: 'Информатика', type: 'weekly', weekday: 4, startTime: '14:00', endTime: '15:30', location: 'Каб. 218', color: 'teal' },
+      { id: uid(), title: 'Химия', type: 'weekly', weekday: 5, startTime: '08:30', endTime: '10:00', location: 'Каб. 402', color: 'green' },
     ],
     tasks: [
       { id: uid(), title: 'Решить 10 задач по алгебре', subject: 'Математика', priority: 'high', status: 'todo', dueDate: isoDaysFromNow(1), createdAt: new Date().toISOString() },

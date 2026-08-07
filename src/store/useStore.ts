@@ -4,6 +4,7 @@ import type { Deadline, FocusSession, Lesson, Note, Settings, Task } from '../ty
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from '../lib/constants'
 import { getDemoData } from '../lib/demoData'
 import { loadFromStorage } from '../lib/storage'
+import { currentWeekMonday, toISODate } from '../lib/date'
 import { uid } from '../lib/id'
 
 export type TaskInput = Omit<Task, 'id' | 'createdAt'>
@@ -37,6 +38,17 @@ export interface StoreState {
 
 type PersistedState = Pick<StoreState, 'lessons' | 'tasks' | 'deadlines' | 'notes' | 'focusSessions' | 'settings'>
 
+// Legacy records lack `type`; one-off lessons from a previous calendar week are dropped.
+function migrateState(state: PersistedState): PersistedState {
+  const monday = toISODate(currentWeekMonday())
+  return {
+    ...state,
+    lessons: state.lessons
+      .map((l) => ({ ...l, type: l.type ?? 'weekly' }))
+      .filter((l) => !(l.type === 'once' && l.date && l.date < monday)),
+  }
+}
+
 const keys = STORAGE_KEYS
 
 const emptyState: PersistedState = {
@@ -61,18 +73,21 @@ const storage: PersistStorage<PersistedState> = {
   getItem: (name) => {
     // Umbrella key written by zustand's default JSON storage — read as-is.
     const raw = localStorage.getItem(name)
-    if (raw) return JSON.parse(raw)
+    if (raw) {
+      const parsed = JSON.parse(raw) as { state: PersistedState }
+      return { ...parsed, state: migrateState(parsed.state) }
+    }
     // First run: nothing stored anywhere → keep the seeded demo data.
     if (Object.values(keys).every((k) => localStorage.getItem(k) === null)) return null
     return {
-      state: {
+      state: migrateState({
         lessons: loadFromStorage<Lesson[]>(keys.lessons, []),
         tasks: loadFromStorage<Task[]>(keys.tasks, []),
         deadlines: loadFromStorage<Deadline[]>(keys.deadlines, []),
         notes: loadFromStorage<Note[]>(keys.notes, []),
         focusSessions: loadFromStorage<FocusSession[]>(keys.focusSessions, []),
         settings: loadFromStorage<Settings>(keys.settings, DEFAULT_SETTINGS),
-      },
+      }),
       version: 0,
     }
   },

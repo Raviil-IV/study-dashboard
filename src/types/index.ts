@@ -1,9 +1,11 @@
 export interface Lesson {
   id: string
   title: string
+  type: 'weekly' | 'once'
   weekday: number // 0 = Sunday ... 6 = Saturday
   startTime: string // HH:MM
   endTime: string // HH:MM
+  date?: string // ISO YYYY-MM-DD, only for type: 'once'
   location?: string
   note?: string
   color?: string

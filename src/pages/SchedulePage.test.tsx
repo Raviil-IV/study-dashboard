@@ -18,7 +18,7 @@ beforeEach(() => {
   vi.setSystemTime(new Date(2026, 7, 6, 12, 0)) // 2026-08-06, Thursday
   localStorage.clear()
   useStore.setState({
-    lessons: [{ id: '1', title: 'Математика', weekday: 4, startTime: '09:00', endTime: '10:30', location: 'Каб. 201', color: 'blue' }],
+    lessons: [{ id: '1', type: 'weekly', title: 'Математика', weekday: 4, startTime: '09:00', endTime: '10:30', location: 'Каб. 201', color: 'blue' }],
     tasks: [],
     deadlines: [],
     notes: [],
