@@ -2,7 +2,7 @@ import type { Lesson } from '../../types'
 import { isLessonNow, toISODate } from '../../lib/date'
 import LessonCard from './LessonCard'
 
-export default function DayView({ lessons, date, onEdit, onDelete }: { lessons: Lesson[]; date: Date; onEdit: (l: Lesson) => void; onDelete: (id: string) => void }) {
+export default function DayView({ lessons, date, onEdit }: { lessons: Lesson[]; date: Date; onEdit: (l: Lesson) => void }) {
   const today = new Date()
   const dayLessons = lessons
     .filter((l) => (l.type === 'once' ? l.date === toISODate(date) : l.weekday === date.getDay()))
@@ -21,7 +21,6 @@ export default function DayView({ lessons, date, onEdit, onDelete }: { lessons: 
             lesson={l}
             isNow={toISODate(date) === toISODate(today) && isLessonNow(l)}
             onEdit={() => onEdit(l)}
-            onDelete={() => onDelete(l.id)}
           />
         ))
       )}

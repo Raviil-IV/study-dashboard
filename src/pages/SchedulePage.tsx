@@ -66,9 +66,9 @@ export default function SchedulePage() {
         />
       </div>
       {view === 'day' ? (
-        <DayView lessons={lessons} date={new Date()} onEdit={openEdit} onDelete={handleDelete} />
+        <DayView lessons={lessons} date={new Date()} onEdit={openEdit} />
       ) : view === 'week' ? (
-        <WeekView lessons={lessons} onEdit={openEdit} onDelete={handleDelete} />
+        <WeekView lessons={lessons} onEdit={openEdit} />
       ) : (
         <MonthView lessons={lessons} onEdit={openEdit} />
       )}

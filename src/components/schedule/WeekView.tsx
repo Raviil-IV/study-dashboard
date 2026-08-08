@@ -1,11 +1,10 @@
 import type { Lesson } from '../../types'
 import { toISODate } from '../../lib/date'
 import { WEEKDAYS_SHORT, COLOR_CLASSES } from '../../lib/constants'
-import IconButton from '../ui/IconButton'
 
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
-export default function WeekView({ lessons, onEdit, onDelete }: { lessons: Lesson[]; onEdit: (l: Lesson) => void; onDelete: (id: string) => void }) {
+export default function WeekView({ lessons, onEdit }: { lessons: Lesson[]; onEdit: (l: Lesson) => void }) {
   const today = new Date()
   const monday = new Date(today)
   monday.setDate(today.getDate() - ((today.getDay() + 6) % 7))
@@ -33,17 +32,18 @@ export default function WeekView({ lessons, onEdit, onDelete }: { lessons: Lesso
                 <p className="text-xs text-gray-400">—</p>
               ) : (
                 dayLessons.map((l) => (
-                  <div key={l.id} className="rounded-md bg-gray-50 px-2 py-1.5 dark:bg-gray-800">
-                    <div className="flex items-center gap-1.5">
+                  <button
+                    key={l.id}
+                    type="button"
+                    onClick={() => onEdit(l)}
+                    className="w-full rounded-md bg-gray-50 px-2 py-1.5 text-left transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
+                  >
+                    <span className="flex items-center gap-1.5">
                       {l.color && <span className={`h-2 w-2 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
-                      <p className="truncate text-xs font-medium text-gray-800 dark:text-gray-200">{l.title}</p>
-                      <span className="ml-auto flex shrink-0">
-                        <IconButton name="edit" label="Редактировать" onClick={() => onEdit(l)} />
-                        <IconButton name="trash" label="Удалить" onClick={() => onDelete(l.id)} />
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-gray-500 dark:text-gray-400">{l.startTime}–{l.endTime}</p>
-                  </div>
+                      <span className="truncate text-xs font-medium text-gray-800 dark:text-gray-200">{l.title}</span>
+                    </span>
+                    <span className="block text-[11px] text-gray-500 dark:text-gray-400">{l.startTime}–{l.endTime}</span>
+                  </button>
                 ))
               )}
             </div>
