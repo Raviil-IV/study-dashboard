@@ -10,7 +10,7 @@ const MAX_LESSONS = 4
 // getMonthGrid starts weeks on Monday; WEEKDAYS_SHORT is Sunday-first (indexed by getDay()).
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
-export default function MonthView({ lessons, onEdit, onDelete }: { lessons: Lesson[]; onEdit: (l: Lesson) => void; onDelete: (id: string) => void }) {
+export default function MonthView({ lessons, onEdit }: { lessons: Lesson[]; onEdit: (l: Lesson) => void }) {
   const today = new Date()
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const grid = getMonthGrid(cursor.getFullYear(), cursor.getMonth())
@@ -61,15 +61,17 @@ export default function MonthView({ lessons, onEdit, onDelete }: { lessons: Less
                   <p className="text-[10px] text-gray-400">—</p>
                 ) : (
                   visible.map((l) => (
-                    <div key={l.id} className="flex items-center gap-1 rounded bg-gray-50 px-1 py-0.5 dark:bg-gray-800">
+                    <button
+                      key={l.id}
+                      type="button"
+                      onClick={() => onEdit(l)}
+                      title={l.title}
+                      className="flex w-full items-center gap-1 rounded bg-gray-50 px-1 py-0.5 text-left transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
+                    >
                       {l.color && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
                       <span className="text-[10px] text-gray-500 dark:text-gray-400">{l.startTime}</span>
-                      <p className="min-w-0 flex-1 truncate text-[10px] font-medium text-gray-800 dark:text-gray-200">{l.title}</p>
-                      <span className="flex shrink-0">
-                        <IconButton name="edit" label="Редактировать" onClick={() => onEdit(l)} />
-                        <IconButton name="trash" label="Удалить" onClick={() => onDelete(l.id)} />
-                      </span>
-                    </div>
+                      <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-gray-800 dark:text-gray-200">{l.title}</span>
+                    </button>
                   ))
                 )}
                 {extra > 0 && <p className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400">+ ещё {extra}</p>}

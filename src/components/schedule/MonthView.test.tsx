@@ -30,7 +30,7 @@ afterEach(() => {
 })
 
 function renderView(lessons: Lesson[] = []) {
-  return render(<MonthView lessons={lessons} onEdit={() => {}} onDelete={() => {}} />)
+  return render(<MonthView lessons={lessons} onEdit={() => {}} />)
 }
 
 describe('MonthView', () => {
@@ -79,16 +79,13 @@ describe('MonthView', () => {
     expect(screen.getByText(/август 2026/)).toBeInTheDocument()
   })
 
-  it('fires onEdit and onDelete from lesson actions', async () => {
+  it('opens edit on lesson click and has no per-lesson buttons', async () => {
     const user = userEvent.setup()
     const onEdit = vi.fn()
-    const onDelete = vi.fn()
-    render(<MonthView lessons={weekdayLessons} onEdit={onEdit} onDelete={onDelete} />)
-    const editButtons = screen.getAllByRole('button', { name: 'Редактировать' })
-    await user.click(editButtons[0])
+    render(<MonthView lessons={weekdayLessons} onEdit={onEdit} />)
+    await user.click(screen.getAllByRole('button', { name: /Математика/ })[0])
     expect(onEdit).toHaveBeenCalledWith(weekdayLessons[0])
-    const deleteButtons = screen.getAllByRole('button', { name: 'Удалить' })
-    await user.click(deleteButtons[0])
-    expect(onDelete).toHaveBeenCalledWith('1')
+    expect(screen.queryByRole('button', { name: 'Редактировать' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Удалить' })).not.toBeInTheDocument()
   })
 })

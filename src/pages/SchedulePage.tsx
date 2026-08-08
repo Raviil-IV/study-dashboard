@@ -70,7 +70,7 @@ export default function SchedulePage() {
       ) : view === 'week' ? (
         <WeekView lessons={lessons} onEdit={openEdit} onDelete={handleDelete} />
       ) : (
-        <MonthView lessons={lessons} onEdit={openEdit} onDelete={handleDelete} />
+        <MonthView lessons={lessons} onEdit={openEdit} />
       )}
       <Modal open={modalOpen} title={editing ? 'Редактировать занятие' : 'Новое занятие'} onClose={() => setModalOpen(false)}>
         <LessonForm

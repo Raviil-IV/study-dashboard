@@ -118,14 +118,12 @@ describe('SchedulePage', () => {
     expect(screen.getAllByText('Математика').length).toBeGreaterThan(0)
   })
 
-  it('deletes a lesson from the month view', async () => {
+  it('opens the edit modal when a month view lesson is clicked', async () => {
     const user = userEvent.setup()
     renderPage()
     await user.click(screen.getByRole('button', { name: 'Месяц' }))
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
-    // The weekly lesson appears in every Thursday cell of the grid — use the first delete button.
-    await user.click(screen.getAllByRole('button', { name: 'Удалить' })[0])
-    expect(useStore.getState().lessons).toHaveLength(0)
+    await user.click(screen.getAllByRole('button', { name: /Математика/ })[0])
+    expect(screen.getByText('Редактировать занятие')).toBeInTheDocument()
   })
 })
 
