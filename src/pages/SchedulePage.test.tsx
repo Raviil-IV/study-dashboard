@@ -108,6 +108,25 @@ describe('SchedulePage', () => {
     expect(useStore.getState().lessons).toHaveLength(1)
     expect(screen.getByText('Время конца должно быть позже времени начала')).toBeInTheDocument()
   })
+
+  it('switches to month view and shows the current month', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Месяц' }))
+    expect(screen.getByText(/август 2026/)).toBeInTheDocument()
+    // The weekly lesson appears in every Thursday cell of the grid, so use the plural query.
+    expect(screen.getAllByText('Математика').length).toBeGreaterThan(0)
+  })
+
+  it('deletes a lesson from the month view', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Месяц' }))
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    // The weekly lesson appears in every Thursday cell of the grid — use the first delete button.
+    await user.click(screen.getAllByRole('button', { name: 'Удалить' })[0])
+    expect(useStore.getState().lessons).toHaveLength(0)
+  })
 })
 
 afterEach(() => {

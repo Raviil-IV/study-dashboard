@@ -8,6 +8,7 @@ import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
 import DayView from '../components/schedule/DayView'
 import WeekView from '../components/schedule/WeekView'
+import MonthView from '../components/schedule/MonthView'
 import LessonForm, { type LessonFormValues } from '../components/schedule/LessonForm'
 
 export default function SchedulePage() {
@@ -15,7 +16,7 @@ export default function SchedulePage() {
   const addLesson = useStore((s) => s.addLesson)
   const updateLesson = useStore((s) => s.updateLesson)
   const removeLesson = useStore((s) => s.removeLesson)
-  const [view, setView] = useState<'day' | 'week'>('day')
+  const [view, setView] = useState<'day' | 'week' | 'month'>('day')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Lesson | undefined>()
 
@@ -58,15 +59,18 @@ export default function SchedulePage() {
           tabs={[
             { value: 'day', label: 'День' },
             { value: 'week', label: 'Неделя' },
+            { value: 'month', label: 'Месяц' },
           ]}
           value={view}
-          onChange={(v) => setView(v as 'day' | 'week')}
+          onChange={(v) => setView(v as 'day' | 'week' | 'month')}
         />
       </div>
       {view === 'day' ? (
         <DayView lessons={lessons} date={new Date()} onEdit={openEdit} onDelete={handleDelete} />
-      ) : (
+      ) : view === 'week' ? (
         <WeekView lessons={lessons} onEdit={openEdit} onDelete={handleDelete} />
+      ) : (
+        <MonthView lessons={lessons} onEdit={openEdit} onDelete={handleDelete} />
       )}
       <Modal open={modalOpen} title={editing ? 'Редактировать занятие' : 'Новое занятие'} onClose={() => setModalOpen(false)}>
         <LessonForm
