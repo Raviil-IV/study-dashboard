@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import type { Lesson } from '../types'
-import { formatDate, formatTime, isToday, isOverdue, daysUntil, getTodayWeekday, toISODate, isLessonNow, nextLesson } from './date'
+import { formatDate, formatTime, isToday, isOverdue, daysUntil, getTodayWeekday, toISODate, isLessonNow, nextLesson, getMonthGrid } from './date'
 
 describe('date utils', () => {
   beforeEach(() => {
@@ -76,5 +76,30 @@ describe('date utils', () => {
     ] as Lesson[]
     const next = nextLesson(lessons)
     expect(next?.id).toBe('2')
+  })
+
+  it('getMonthGrid returns 42 cells starting on Monday', () => {
+    const grid = getMonthGrid(2026, 7) // August
+    expect(grid).toHaveLength(42)
+    expect(grid[0].date.getDay()).toBe(1) // Monday
+    expect(grid[0].iso).toBe('2026-07-27')
+    expect(grid[41].date.getDay()).toBe(0) // Sunday
+    expect(grid[41].iso).toBe('2026-09-06')
+  })
+
+  it('getMonthGrid marks inMonth correctly', () => {
+    const grid = getMonthGrid(2026, 7)
+    expect(grid.find((d) => d.iso === '2026-08-01')?.inMonth).toBe(true)
+    expect(grid.find((d) => d.iso === '2026-08-31')?.inMonth).toBe(true)
+    expect(grid.find((d) => d.iso === '2026-07-27')?.inMonth).toBe(false)
+    expect(grid.find((d) => d.iso === '2026-09-01')?.inMonth).toBe(false)
+    expect(grid.filter((d) => d.inMonth)).toHaveLength(31)
+  })
+
+  it('getMonthGrid rolls the year over for December', () => {
+    const grid = getMonthGrid(2026, 11) // December 2026
+    expect(grid[0].iso).toBe('2026-11-30')
+    expect(grid[41].iso).toBe('2027-01-10')
+    expect(grid.filter((d) => d.inMonth)).toHaveLength(31)
   })
 })

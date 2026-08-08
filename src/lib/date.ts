@@ -85,3 +85,21 @@ export function nextLesson(lessons: Lesson[]): Lesson | null {
   future.sort((a, b) => a.key - b.key)
   return future[0]?.lesson ?? null
 }
+
+export interface CalendarDay {
+  date: Date
+  iso: string
+  inMonth: boolean
+}
+
+export function getMonthGrid(year: number, month: number): CalendarDay[] {
+  const first = new Date(year, month, 1)
+  const monday = new Date(year, month, 1 - ((first.getDay() + 6) % 7))
+  const grid: CalendarDay[] = []
+  for (let i = 0; i < 42; i++) {
+    const date = new Date(monday)
+    date.setDate(monday.getDate() + i)
+    grid.push({ date, iso: toISODate(date), inMonth: date.getMonth() === month })
+  }
+  return grid
+}
