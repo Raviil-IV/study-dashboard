@@ -19,15 +19,6 @@ export default function MonthView({ lessons, onEdit, onDelete }: { lessons: Less
   const goNext = () => setCursor((c) => new Date(c.getFullYear(), c.getMonth() + 1, 1))
   const goToday = () => setCursor(new Date(today.getFullYear(), today.getMonth(), 1))
 
-  // Each weekly lesson is shown once per month — in the first in-month cell of its weekday.
-  const firstDayByWeekday = new Map<number, string>()
-  for (const day of grid) {
-    const weekday = day.date.getDay()
-    if (day.inMonth && !firstDayByWeekday.has(weekday)) {
-      firstDayByWeekday.set(weekday, day.iso)
-    }
-  }
-
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
@@ -50,9 +41,7 @@ export default function MonthView({ lessons, onEdit, onDelete }: { lessons: Less
         ))}
         {grid.map((day) => {
           const dayLessons = lessons
-            .filter((l) =>
-              l.type === 'once' ? l.date === day.iso : l.weekday === day.date.getDay() && firstDayByWeekday.get(l.weekday) === day.iso,
-            )
+            .filter((l) => (l.type === 'once' ? l.date === day.iso : l.weekday === day.date.getDay()))
             .sort((a, b) => a.startTime.localeCompare(b.startTime))
           const visible = dayLessons.slice(0, MAX_LESSONS)
           const extra = dayLessons.length - visible.length

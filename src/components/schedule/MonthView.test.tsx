@@ -10,13 +10,15 @@ const weekdayLessons: Lesson[] = [
 const onceLesson: Lesson[] = [
   { id: '2', type: 'once', title: 'Семинар', weekday: 5, startTime: '13:00', endTime: '14:00', date: '2026-08-07' },
 ]
-const fiveInOneDay: Lesson[] = Array.from({ length: 5 }, (_, i) => ({
+// Five one-off lessons on a single date (2026-08-06, Thursday) — used to test the per-cell limit.
+const fiveOnceInOneDay: Lesson[] = Array.from({ length: 5 }, (_, i) => ({
   id: String(i + 1),
-  type: 'weekly' as const,
+  type: 'once' as const,
   title: `Занятие ${i + 1}`,
   weekday: 4,
   startTime: `${String(9 + i).padStart(2, '0')}:00`,
   endTime: '10:00',
+  date: '2026-08-06',
 }))
 
 beforeEach(() => {
@@ -39,9 +41,10 @@ describe('MonthView', () => {
     expect(screen.getByText('Вс')).toBeInTheDocument()
   })
 
-  it('shows a weekly lesson in its weekday cell', () => {
+  it('shows a weekly lesson in every matching weekday cell', () => {
     renderView(weekdayLessons)
-    expect(screen.getByText('Математика')).toBeInTheDocument()
+    // August 2026 grid spans 2026-07-27 … 2026-09-06; Thursdays: 30.07, 06.08, 13.08, 20.08, 27.08, 03.09
+    expect(screen.getAllByText('Математика')).toHaveLength(6)
   })
 
   it('shows a one-off lesson only on its date', () => {
@@ -50,7 +53,7 @@ describe('MonthView', () => {
   })
 
   it('limits cell to 4 lessons and shows "+ ещё N"', () => {
-    renderView(fiveInOneDay)
+    renderView(fiveOnceInOneDay)
     expect(screen.getAllByText(/Занятие \d/)).toHaveLength(4)
     expect(screen.getByText('+ ещё 1')).toBeInTheDocument()
   })
@@ -81,9 +84,11 @@ describe('MonthView', () => {
     const onEdit = vi.fn()
     const onDelete = vi.fn()
     render(<MonthView lessons={weekdayLessons} onEdit={onEdit} onDelete={onDelete} />)
-    await user.click(screen.getByRole('button', { name: 'Редактировать' }))
+    const editButtons = screen.getAllByRole('button', { name: 'Редактировать' })
+    await user.click(editButtons[0])
     expect(onEdit).toHaveBeenCalledWith(weekdayLessons[0])
-    await user.click(screen.getByRole('button', { name: 'Удалить' }))
+    const deleteButtons = screen.getAllByRole('button', { name: 'Удалить' })
+    await user.click(deleteButtons[0])
     expect(onDelete).toHaveBeenCalledWith('1')
   })
 })
