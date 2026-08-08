@@ -98,6 +98,27 @@ describe('SchedulePage', () => {
     expect(screen.getByText('Редактировать занятие')).toBeInTheDocument()
   })
 
+  it('deletes a lesson via the edit modal from the week view', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Неделя' }))
+    await user.click(screen.getAllByRole('button', { name: /Математика/ })[0])
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    await user.click(screen.getByRole('button', { name: 'Удалить' }))
+    expect(useStore.getState().lessons).toHaveLength(0)
+    expect(screen.queryByText('Редактировать занятие')).not.toBeInTheDocument()
+  })
+
+  it('deletes a lesson via the edit modal from the month view', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Месяц' }))
+    await user.click(screen.getAllByRole('button', { name: /Математика/ })[0])
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    await user.click(screen.getByRole('button', { name: 'Удалить' }))
+    expect(useStore.getState().lessons).toHaveLength(0)
+  })
+
   it('validates end time after start time', async () => {
     const user = userEvent.setup()
     renderPage()

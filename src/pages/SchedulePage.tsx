@@ -42,6 +42,7 @@ export default function SchedulePage() {
   const handleDelete = (id: string) => {
     if (window.confirm('Удалить занятие?')) {
       removeLesson(id)
+      setModalOpen(false)
     }
   }
 
@@ -78,6 +79,7 @@ export default function SchedulePage() {
           initial={editing}
           onSubmit={handleSubmit}
           onCancel={() => setModalOpen(false)}
+          onDelete={editing ? () => handleDelete(editing.id) : undefined}
         />
       </Modal>
     </div>
