@@ -30,7 +30,7 @@ const DEFAULT_VALUES: LessonFormValues = {
   date: '',
 }
 
-export default function LessonForm({ initial, onSubmit, onCancel }: { initial?: Lesson; onSubmit: (values: LessonFormValues) => void; onCancel: () => void }) {
+export default function LessonForm({ initial, onSubmit, onCancel, onDelete }: { initial?: Lesson; onSubmit: (values: LessonFormValues) => void; onCancel: () => void; onDelete?: () => void }) {
   const [values, setValues] = useState<LessonFormValues>(() =>
     initial
       ? {
@@ -107,9 +107,16 @@ export default function LessonForm({ initial, onSubmit, onCancel }: { initial?: 
       <Input label="Кабинет / ссылка" value={values.location} onChange={(e) => setValues({ ...values, location: e.target.value })} placeholder="Каб. 201 или ссылка" />
       <Input label="Заметка" value={values.note} onChange={(e) => setValues({ ...values, note: e.target.value })} />
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="secondary" onClick={onCancel}>Отмена</Button>
-        <Button type="submit">Сохранить</Button>
+      <div className="flex items-center justify-between pt-2">
+        {onDelete ? (
+          <Button type="button" variant="danger" onClick={onDelete}>Удалить</Button>
+        ) : (
+          <span />
+        )}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onCancel}>Отмена</Button>
+          <Button type="submit">Сохранить</Button>
+        </div>
       </div>
     </form>
   )
