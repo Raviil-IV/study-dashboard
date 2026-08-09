@@ -16,6 +16,7 @@ services:
 
   backend:
     build: ./backend
+    image: study-dashboard-backend
     restart: unless-stopped
     depends_on:
       postgres:
@@ -30,6 +31,7 @@ services:
 
   frontend:
     build: .
+    image: study-dashboard-frontend
     restart: unless-stopped
     depends_on:
       - backend
