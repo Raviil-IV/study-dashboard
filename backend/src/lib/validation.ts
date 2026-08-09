@@ -4,13 +4,21 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Дата должна �
 const hhmm = z.string().regex(/^\d{2}:\d{2}$/, 'Время должно быть в формате ЧЧ:ММ')
 
 export const registerSchema = z.object({
-  email: z.string().trim().toLowerCase().email('Некорректный email'),
-  password: z.string().min(8, 'Пароль должен быть не короче 8 символов').max(128, 'Пароль слишком длинный'),
+  login: z
+    .string()
+    .min(3, 'Логин должен содержать от 3 до 32 символов')
+    .max(32, 'Логин должен содержать от 3 до 32 символов')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Логин может содержать только латинские буквы, цифры, _ и -'),
+  password: z.string().min(6, 'Пароль должен быть не короче 6 символов').max(128, 'Пароль слишком длинный'),
 })
 
 export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email('Некорректный email'),
-  password: z.string().min(1, 'Введите пароль'),
+  login: z
+    .string()
+    .min(3, 'Логин должен содержать от 3 до 32 символов')
+    .max(32, 'Логин должен содержать от 3 до 32 символов')
+    .regex(/^[a-zA-Z0-9_-]+$/, 'Логин может содержать только латинские буквы, цифры, _ и -'),
+  password: z.string().min(6, 'Пароль должен быть не короче 6 символов'),
 })
 
 export const lessonSchema = z

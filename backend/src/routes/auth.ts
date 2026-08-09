@@ -18,16 +18,16 @@ const authLimiter = rateLimit({
 
 authRouter.post('/register', authLimiter, async (req, res, next) => {
   try {
-    const { email, password } = registerSchema.parse(req.body)
-    const existing = await db.select().from(users).where(eq(users.email, email))
+    const { login, password } = registerSchema.parse(req.body)
+    const existing = await db.select().from(users).where(eq(users.login, login))
     if (existing.length > 0) {
-      res.status(409).json({ error: { code: 'EMAIL_TAKEN', message: 'Пользователь с таким email уже существует' } })
+      res.status(409).json({ error: { code: 'LOGIN_TAKEN', message: 'Логин уже занят' } })
       return
     }
     const passwordHash = await hashPassword(password)
-    const [user] = await db.insert(users).values({ email, passwordHash }).returning()
+    const [user] = await db.insert(users).values({ login, passwordHash }).returning()
     setAuthCookie(res, user.id)
-    res.status(201).json({ id: user.id, email: user.email })
+    res.status(201).json({ id: user.id, login: user.login })
   } catch (err) {
     next(err)
   }
@@ -35,14 +35,14 @@ authRouter.post('/register', authLimiter, async (req, res, next) => {
 
 authRouter.post('/login', authLimiter, async (req, res, next) => {
   try {
-    const { email, password } = loginSchema.parse(req.body)
-    const [user] = await db.select().from(users).where(eq(users.email, email))
+    const { login, password } = loginSchema.parse(req.body)
+    const [user] = await db.select().from(users).where(eq(users.login, login))
     if (!user || !(await verifyPassword(password, user.passwordHash))) {
-      res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Неверный email или пароль' } })
+      res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Неверный логин или пароль' } })
       return
     }
     setAuthCookie(res, user.id)
-    res.json({ id: user.id, email: user.email })
+    res.json({ id: user.id, login: user.login })
   } catch (err) {
     next(err)
   }
@@ -60,7 +60,7 @@ authRouter.get('/me', requireAuth, async (req, res, next) => {
       res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Пользователь не найден' } })
       return
     }
-    res.json({ id: user.id, email: user.email })
+    res.json({ id: user.id, login: user.login })
   } catch (err) {
     next(err)
   }

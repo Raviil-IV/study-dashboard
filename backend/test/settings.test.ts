@@ -11,7 +11,7 @@ describe('settings', () => {
 
   it('saves and overwrites settings per user', async () => {
     const agent = createAgent()
-    await signUp(agent, 's1@test.dev')
+    await signUp(agent, 'set1')
     const first = await agent.put('/api/settings').send({ theme: 'dark', pomodoroWorkMinutes: 30, pomodoroShortBreakMinutes: 5, pomodoroLongBreakMinutes: 15 })
     expect(first.status).toBe(200)
     expect(first.body.theme).toBe('dark')
@@ -23,7 +23,7 @@ describe('settings', () => {
 
   it('rejects invalid settings with 400', async () => {
     const agent = createAgent()
-    await signUp(agent, 's2@test.dev')
+    await signUp(agent, 'set2')
     const res = await agent.put('/api/settings').send({ theme: 'dark', pomodoroWorkMinutes: 0, pomodoroShortBreakMinutes: 5, pomodoroLongBreakMinutes: 15 })
     expect(res.status).toBe(400)
   })

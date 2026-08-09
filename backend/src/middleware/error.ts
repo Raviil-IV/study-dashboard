@@ -12,7 +12,7 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     return
   }
   if (typeof err === 'object' && err !== null && (err as PgError).code === '23505') {
-    res.status(409).json({ error: { code: 'EMAIL_TAKEN', message: 'Пользователь с таким email уже существует' } })
+    res.status(409).json({ error: { code: 'LOGIN_TAKEN', message: 'Логин уже занят' } })
     return
   }
   console.error(err)
