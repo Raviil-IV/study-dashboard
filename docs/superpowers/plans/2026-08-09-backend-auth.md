@@ -3070,3 +3070,40 @@ git commit -m "Final validation fixes"
 - `hydrate(state: ServerState)` / `resetLocal()` — Task 14 и Task 17.
 - Фабрика `createEntityRouter(table, schema)` — Task 8 производит `Router` с `POST/PATCH/DELETE`; Task 11 использует для 5 таблиц.
 - `runMigrations()` — Task 3 производит, Task 11 (index.ts) и globalSetup используют.
+
+---
+
+## Дельта: вход по логину (без email) + выход в UI (2026-08-09)
+
+**Основание:** решение пользователя после принятия основной спеки. Изменяет контракт авторизации: `email` → `login` (латиница/цифры/`_`/`-`, 3–32), пароль мин. 6 символов; логин отображается в интерфейсе с кнопкой «Выйти». Спека уже обновлена (`2026-08-09-backend-auth-design.md`, разделы 5–8, 13).
+
+### Task D1: Backend — логин вместо email
+
+**Файлы:** `backend/src/db/schema.ts`, миграция `0001`, `backend/src/lib/validation.ts`, `backend/src/routes/auth.ts`, `backend/src/middleware/error.ts`, `backend/test/helpers.ts`, `backend/test/auth.test.ts`.
+
+- [ ] D1.1 Схема: в `users` колонка `email` → `login` (`text('login').unique().notNull()`); остальные колонки без изменений.
+- [ ] D1.2 Миграция `backend/drizzle/0001_login_auth.sql`: `ALTER TABLE "users" RENAME COLUMN "email" TO "login";` + запись в `meta/_journal.json` (неразрушающая — уже применённая `0000` и данные сохраняются).
+- [ ] D1.3 Валидация (`validation.ts`): `registerSchema`/`loginSchema` — `login: z.string().min(3).max(32).regex(/^[a-zA-Z0-9_-]+$/)` с русскими сообщениями («Логин должен содержать от 3 до 32 символов», «Логин может содержать только латинские буквы, цифры, _ и -»); `password: z.string().min(6, 'Пароль должен быть не короче 6 символов')`.
+- [ ] D1.4 `routes/auth.ts`: регистрация/вход по `{ login, password }` (поиск по `login`); `/auth/me` → `{ id, login }`; ответы без email.
+- [ ] D1.5 `middleware/error.ts`: код 23505 для `users.login` → `409 LOGIN_TAKEN` «Логин уже занят».
+- [ ] D1.6 Тесты: `helpers.ts` — дефолтный `login = 'user' + random`; `auth.test.ts` — регистрация/вход по логину, дубликат → 409, короткий пароль (5 символов) → 400 с русским сообщением.
+- [ ] D1.7 Верификация: `npx tsc --noEmit` + `npx vitest run` (нужен postgres на localhost:5432) — все 24+ теста зелёные.
+
+### Task D2: Frontend — логин, отображение пользователя, выход
+
+**Файлы:** `src/store/useAuth.ts`, `src/pages/LoginPage.tsx`, `src/pages/RegisterPage.tsx`, `src/components/layout/Sidebar.tsx`, `src/components/layout/AppLayout.tsx` (мобильная шапка), тесты: `src/store/useAuth.test.ts`, `src/pages/LoginPage.test.tsx`, `src/pages/RegisterPage.test.tsx`, `src/App.test.tsx`.
+
+- [ ] D2.1 `useAuth.ts`: `user: { id: string; login: string } | null`; `check()` читает `/auth/me` → `{id, login}`; `login(login, password)` / `register(login, password)`.
+- [ ] D2.2 `LoginPage.tsx`: поле «Логин» вместо email (label «Логин», autocomplete «username»), submit → `login(login, password)`.
+- [ ] D2.3 `RegisterPage.tsx`: поле «Логин» вместо email, подтверждение пароля остаётся.
+- [ ] D2.4 `Sidebar.tsx`: внизу (под «Настройки») блок пользователя — логин + кнопка «Выйти» (`useAuth` → `logout()`; после выхода ProtectedRoute сам редиректит на `/login`).
+- [ ] D2.5 `AppLayout.tsx`: в мобильной шапке (рядом с ThemeToggle) — логин + компактная кнопка «Выйти».
+- [ ] D2.6 Тесты: обновить моки `user: {id, login}` и вызовы `login/register` (App, useAuth, LoginPage, RegisterPage).
+- [ ] D2.7 Верификация: `npm run test` (все зелёные) и `npm run build` — без ошибок.
+
+### Task D3: Валидация после дельты
+
+- [ ] D3.1 `npm --prefix backend test` (24+ теста) и `npm run test` (132 теста) — зелёные.
+- [ ] D3.2 `npm run build` (корень) и `npm --prefix backend run build` — без ошибок.
+- [ ] D3.3 Пересборка стека (`docker compose up -d --build`) и смоук: регистрация с логином → вход → `/api/auth/me` → `{id, login}` → создание записи → снимок; выход — кука очищается.
+- [ ] D3.4 Коммиты: правки спеки и плана, затем реализация.
