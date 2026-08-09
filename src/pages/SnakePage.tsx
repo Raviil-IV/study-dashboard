@@ -67,8 +67,9 @@ export default function SnakePage() {
   useEffect(() => {
     if (!game.gameOver || resultHandledRef.current) return
     resultHandledRef.current = true
-    const isRecord = submitGameRecord('snake', difficulty, game.score)
-    setResult({ score: game.score, seconds, isRecord })
+    void submitGameRecord('snake', difficulty, game.score).then((isRecord) => {
+      setResult({ score: game.score, seconds, isRecord })
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game.gameOver, result])
 

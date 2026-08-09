@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { cacheState, loadCachedState } from './cache'
+import type { ServerState } from '../store/useStore'
 
-const sample = {
+const sample: ServerState = {
   lessons: [],
   tasks: [],
   deadlines: [],

@@ -1,6 +1,16 @@
 import { renderHook, act } from '@testing-library/react'
-import { describe, expect, it, beforeEach } from 'vitest'
+import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { useTheme } from './useTheme'
+
+vi.mock('../lib/api', () => ({
+  api: {
+    get: vi.fn().mockResolvedValue(undefined),
+    post: vi.fn().mockResolvedValue(undefined),
+    patch: vi.fn().mockResolvedValue(undefined),
+    put: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+  },
+}))
 
 beforeEach(() => {
   document.documentElement.classList.remove('dark')

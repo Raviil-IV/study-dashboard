@@ -42,8 +42,9 @@ export default function MinesweeperPage() {
     if (!game.gameOver || resultHandledRef.current) return
     resultHandledRef.current = true
     if (game.won) {
-      const isRecord = submitGameRecord('minesweeper', difficulty, seconds)
-      setResult({ seconds, isRecord, won: true })
+      void submitGameRecord('minesweeper', difficulty, seconds).then((isRecord) => {
+        setResult({ seconds, isRecord, won: true })
+      })
     } else {
       setResult({ seconds, isRecord: false, won: false })
     }

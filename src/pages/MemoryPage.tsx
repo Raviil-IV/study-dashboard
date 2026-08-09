@@ -60,8 +60,9 @@ export default function MemoryPage() {
     }
     setGame(next)
     if (memoryWin(next)) {
-      const isRecord = submitGameRecord('memory', difficulty, next.moves)
-      setResult({ moves: next.moves, seconds, isRecord })
+      void submitGameRecord('memory', difficulty, next.moves).then((isRecord) => {
+        setResult({ moves: next.moves, seconds, isRecord })
+      })
     }
   }
 

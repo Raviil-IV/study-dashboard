@@ -3,13 +3,10 @@ import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Select from '../components/ui/Select'
 import Input from '../components/ui/Input'
-import Button from '../components/ui/Button'
 
 export default function SettingsPage() {
   const settings = useStore((s) => s.settings)
   const updateSettings = useStore((s) => s.updateSettings)
-  const resetAll = useStore((s) => s.resetAll)
-  const clearAll = useStore((s) => s.clearAll)
 
   return (
     <div className="max-w-xl">
@@ -48,16 +45,6 @@ export default function SettingsPage() {
               value={settings.pomodoroLongBreakMinutes}
               onChange={(e) => updateSettings({ pomodoroLongBreakMinutes: Math.max(1, Number(e.target.value) || 15) })}
             />
-          </div>
-        </Card>
-        <Card title="Данные">
-          <div className="flex flex-wrap gap-3">
-            <Button variant="secondary" onClick={() => { if (window.confirm('Вернуть демо-данные? Текущие данные будут заменены.')) resetAll() }}>
-              Сбросить демо-данные
-            </Button>
-            <Button variant="danger" onClick={() => { if (window.confirm('Удалить все данные? Это действие нельзя отменить.')) clearAll() }}>
-              Очистить все данные
-            </Button>
           </div>
         </Card>
       </div>

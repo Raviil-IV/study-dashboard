@@ -5,6 +5,16 @@ import { MemoryRouter } from 'react-router-dom'
 import SchedulePage from './SchedulePage'
 import { useStore } from '../store/useStore'
 
+vi.mock('../lib/api', () => ({
+  api: {
+    get: vi.fn().mockResolvedValue(undefined),
+    post: vi.fn().mockResolvedValue(undefined),
+    patch: vi.fn().mockResolvedValue(undefined),
+    put: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+  },
+}))
+
 function renderPage() {
   return render(
     <MemoryRouter>

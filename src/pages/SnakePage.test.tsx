@@ -5,6 +5,12 @@ import SnakePage from './SnakePage'
 import { useStore } from '../store/useStore'
 import { EMPTY_GAME_RECORDS } from '../lib/games/types'
 
+const { putMock } = vi.hoisted(() => ({ putMock: vi.fn() }))
+
+vi.mock('../lib/api', () => ({
+  api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), put: putMock, delete: vi.fn() },
+}))
+
 const RESET_STATE = {
   lessons: [],
   tasks: [],
@@ -19,6 +25,7 @@ beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
   // deterministic food spawn: first free cell is (0,0)
   vi.spyOn(Math, 'random').mockReturnValue(0)
+  putMock.mockResolvedValue({ isRecord: true })
   localStorage.clear()
   useStore.setState(RESET_STATE)
 })
@@ -56,7 +63,7 @@ describe('SnakePage', () => {
     expect(screen.getByTestId('snake-cell-5-7')).not.toHaveAttribute('data-role') // tail cell is now empty
   })
 
-  it('shows game over modal on wall collision and saves a record', () => {
+  it('shows game over modal on wall collision and saves a record', async () => {
     render(
       <MemoryRouter>
         <SnakePage />
@@ -67,6 +74,7 @@ describe('SnakePage', () => {
     act(() => {
       vi.advanceTimersByTime(150 * 8)
     })
+    await act(async () => {})
     expect(screen.getByText('Игра окончена 💀')).toBeInTheDocument()
     expect(useStore.getState().gameRecords.snake.easy).toBe(0)
   })
@@ -89,7 +97,7 @@ describe('SnakePage', () => {
     expect(screen.getByTestId('snake-cell-8-7')).toBeInTheDocument() // one tick to the right
   })
 
-  it('closes the result modal without reopening it', () => {
+  it('closes the result modal without reopening it', async () => {
     render(
       <MemoryRouter>
         <SnakePage />
@@ -99,12 +107,13 @@ describe('SnakePage', () => {
     act(() => {
       vi.advanceTimersByTime(150 * 8) // wall collision
     })
+    await act(async () => {})
     expect(screen.getByText('Игра окончена 💀')).toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Закрыть' })[0])
     expect(screen.queryByText('Игра окончена 💀')).not.toBeInTheDocument()
   })
 
-  it('restarts the game after game over', () => {
+  it('restarts the game after game over', async () => {
     render(
       <MemoryRouter>
         <SnakePage />
@@ -114,6 +123,7 @@ describe('SnakePage', () => {
     act(() => {
       vi.advanceTimersByTime(150 * 8) // wall collision on the 8th step
     })
+    await act(async () => {})
     expect(screen.getByText('Игра окончена 💀')).toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Заново' })[0])
     expect(screen.queryByText('Игра окончена 💀')).not.toBeInTheDocument()

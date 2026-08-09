@@ -1,9 +1,15 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import MinesweeperPage from './MinesweeperPage'
 import { useStore } from '../store/useStore'
 import { EMPTY_GAME_RECORDS } from '../lib/games/types'
+
+const { putMock } = vi.hoisted(() => ({ putMock: vi.fn() }))
+
+vi.mock('../lib/api', () => ({
+  api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), put: putMock, delete: vi.fn() },
+}))
 
 const RESET_STATE = {
   lessons: [],
@@ -20,6 +26,7 @@ beforeEach(() => {
   // deterministic mine placement: mock≈1 → Fisher-Yates is a no-op → mines land
   // at the first candidate indices (top edge cluster), so opening the center wins
   vi.spyOn(Math, 'random').mockReturnValue(0.999)
+  putMock.mockResolvedValue({ isRecord: true })
   localStorage.clear()
   useStore.setState(RESET_STATE)
 })
@@ -52,7 +59,7 @@ describe('MinesweeperPage', () => {
     expect(screen.getByTestId('mine-cell-0')).toHaveAttribute('data-state', 'hidden')
   })
 
-  it('opens a cell on click and wins when the field floods', () => {
+  it('opens a cell on click and wins when the field floods', async () => {
     render(
       <MemoryRouter>
         <MinesweeperPage />
@@ -60,18 +67,20 @@ describe('MinesweeperPage', () => {
     )
     // with the deterministic top-edge mine cluster, opening the center floods the board
     fireEvent.click(screen.getByTestId('mine-cell-40'))
+    await act(async () => {})
     expect(screen.getByTestId('mine-cell-40')).toHaveAttribute('data-state', 'revealed')
     expect(screen.getByText('Победа! 🎉')).toBeInTheDocument()
     expect(useStore.getState().gameRecords.minesweeper.easy).toBe(0)
   })
 
-  it('closes the result modal without reopening it', () => {
+  it('closes the result modal without reopening it', async () => {
     render(
       <MemoryRouter>
         <MinesweeperPage />
       </MemoryRouter>,
     )
     fireEvent.click(screen.getByTestId('mine-cell-40')) // flood → win
+    await act(async () => {})
     expect(screen.getByText('Победа! 🎉')).toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Закрыть' })[0])
     expect(screen.queryByText('Победа! 🎉')).not.toBeInTheDocument()

@@ -5,6 +5,12 @@ import MemoryPage from './MemoryPage'
 import { useStore } from '../store/useStore'
 import { EMPTY_GAME_RECORDS } from '../lib/games/types'
 
+const { putMock } = vi.hoisted(() => ({ putMock: vi.fn() }))
+
+vi.mock('../lib/api', () => ({
+  api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), put: putMock, delete: vi.fn() },
+}))
+
 const RESET_STATE = {
   lessons: [],
   tasks: [],
@@ -19,6 +25,7 @@ beforeEach(() => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
   // deterministic shuffle: sort comparator stays negative → deck keeps pair order [e0..e7, e0..e7]
   vi.spyOn(Math, 'random').mockReturnValue(0)
+  putMock.mockResolvedValue({ isRecord: true })
   localStorage.clear()
   useStore.setState(RESET_STATE)
 })
@@ -68,7 +75,7 @@ describe('MemoryPage', () => {
     expect(screen.getByTestId('memory-card-1')).toHaveAttribute('data-state', 'closed')
   })
 
-  it('shows win modal with moves and saves a record', () => {
+  it('shows win modal with moves and saves a record', async () => {
     render(
       <MemoryRouter>
         <MemoryPage />
@@ -88,6 +95,7 @@ describe('MemoryPage', () => {
       fireEvent.click(screen.getByTestId(`memory-card-${a}`))
       fireEvent.click(screen.getByTestId(`memory-card-${b}`))
     }
+    await act(async () => {})
     expect(screen.getByText('Победа! 🎉')).toBeInTheDocument()
     expect(screen.getByText('Результат: 8 ходов за 0 с')).toBeInTheDocument()
     expect(useStore.getState().gameRecords.memory.easy).toBe(8)

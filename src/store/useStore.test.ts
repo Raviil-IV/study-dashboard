@@ -1,10 +1,21 @@
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
+import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { useStore } from './useStore'
+import type { Task } from '../types'
+
+const { postMock, patchMock, deleteMock, putMock } = vi.hoisted(() => ({
+  postMock: vi.fn(),
+  patchMock: vi.fn(),
+  deleteMock: vi.fn(),
+  putMock: vi.fn(),
+}))
+
+vi.mock('../lib/api', () => ({
+  api: { get: vi.fn(), post: postMock, patch: patchMock, put: putMock, delete: deleteMock },
+}))
+vi.mock('../lib/toast', () => ({ notifyError: vi.fn(), useToast: { getState: () => ({ show: vi.fn() }) } }))
 
 beforeEach(() => {
-  vi.useFakeTimers({ shouldAdvanceTime: true })
-  vi.setSystemTime(new Date(2026, 7, 6, 12, 0)) // 2026-08-06, Thursday
-  localStorage.clear()
+  vi.clearAllMocks()
   useStore.setState({
     lessons: [],
     tasks: [],
@@ -12,105 +23,89 @@ beforeEach(() => {
     notes: [],
     focusSessions: [],
     settings: { theme: 'system', pomodoroWorkMinutes: 25, pomodoroShortBreakMinutes: 5, pomodoroLongBreakMinutes: 15 },
+    gameRecords: { memory: {}, snake: {}, minesweeper: {} },
   })
 })
 
 describe('useStore', () => {
-  it('adds a task', () => {
+  it('adds a task optimistically and posts it to the server', () => {
+    postMock.mockResolvedValue({} as Task)
     useStore.getState().addTask({ title: 'Решить 5 задач', priority: 'medium', status: 'todo' })
     expect(useStore.getState().tasks).toHaveLength(1)
     expect(useStore.getState().tasks[0].title).toBe('Решить 5 задач')
+    expect(postMock).toHaveBeenCalledWith('/tasks', expect.objectContaining({ title: 'Решить 5 задач' }))
   })
 
-  it('toggles task status', () => {
-    const { addTask, toggleTask } = useStore.getState()
-    addTask({ title: 'Прочитать параграф', priority: 'low', status: 'todo' })
-    const id = useStore.getState().tasks[0].id
+  it('rolls back an optimistic add when the server rejects', async () => {
+    postMock.mockRejectedValue(new Error('Что-то пошло не так'))
+    useStore.getState().addTask({ title: 'X', priority: 'low', status: 'todo' })
+    expect(useStore.getState().tasks).toHaveLength(1)
+    await vi.waitFor(() => expect(useStore.getState().tasks).toHaveLength(0))
+  })
 
-    toggleTask(id)
+  it('toggles a task status and patches the server', () => {
+    postMock.mockResolvedValue({} as Task)
+    patchMock.mockResolvedValue({} as Task)
+    useStore.getState().addTask({ title: 'Прочитать параграф', priority: 'low', status: 'todo' })
+    const id = useStore.getState().tasks[0].id
+    useStore.getState().toggleTask(id)
     expect(useStore.getState().tasks[0].status).toBe('done')
     expect(useStore.getState().tasks[0].completedAt).toBeTruthy()
-    toggleTask(id)
-    expect(useStore.getState().tasks[0].status).toBe('todo')
+    expect(patchMock).toHaveBeenCalledWith(`/tasks/${id}`, expect.objectContaining({ status: 'done' }))
   })
 
-  it('persists to localStorage under study-dashboard keys', () => {
-    useStore.getState().addLesson({ type: 'weekly', title: 'Математика', weekday: 1, startTime: '09:00', endTime: '10:30' })
-    const raw = localStorage.getItem('study-dashboard:lessons')
-    expect(raw).toBeTruthy()
-    expect(JSON.parse(raw!).length).toBeGreaterThan(0)
+  it('rolls back an optimistic patch on failure', async () => {
+    postMock.mockResolvedValue({} as Task)
+    useStore.getState().addTask({ title: 'A', priority: 'low', status: 'todo' })
+    const id = useStore.getState().tasks[0].id
+    patchMock.mockRejectedValue(new Error('fail'))
+    useStore.getState().updateTask(id, { title: 'B' })
+    expect(useStore.getState().tasks[0].title).toBe('B')
+    await vi.waitFor(() => expect(useStore.getState().tasks[0].title).toBe('A'))
   })
 
-  it('resets to demo data via resetAll and clears via clearAll', () => {
-    const { resetAll, clearAll } = useStore.getState()
-    resetAll()
-    expect(useStore.getState().lessons.length).toBeGreaterThan(0)
-    clearAll()
+  it('removes a task and calls the server', () => {
+    deleteMock.mockResolvedValue(undefined)
+    postMock.mockResolvedValue({} as Task)
+    useStore.getState().addTask({ title: 'Удалить', priority: 'low', status: 'todo' })
+    const id = useStore.getState().tasks[0].id
+    useStore.getState().removeTask(id)
+    expect(useStore.getState().tasks).toHaveLength(0)
+    expect(deleteMock).toHaveBeenCalledWith(`/tasks/${id}`)
+  })
+
+  it('hydrate() replaces all collections', () => {
+    useStore.getState().hydrate({
+      lessons: [],
+      tasks: [{ id: 't1', title: 'Из сервера', priority: 'high', status: 'todo', createdAt: '2026-08-01T00:00:00.000Z' }],
+      deadlines: [],
+      notes: [],
+      focusSessions: [],
+      settings: { theme: 'dark', pomodoroWorkMinutes: 50, pomodoroShortBreakMinutes: 10, pomodoroLongBreakMinutes: 20 },
+      gameRecords: { memory: {}, snake: { easy: 5 }, minesweeper: {} },
+    })
+    expect(useStore.getState().tasks[0].title).toBe('Из сервера')
+    expect(useStore.getState().settings.theme).toBe('dark')
+  })
+
+  it('submitGameRecord is server-authoritative', async () => {
+    putMock.mockResolvedValue({ isRecord: true })
+    const isRecord = await useStore.getState().submitGameRecord('memory', 'easy', 12)
+    expect(isRecord).toBe(true)
+    expect(useStore.getState().gameRecords.memory.easy).toBe(12)
+  })
+
+  it('submitGameRecord does not update the store when the server says no', async () => {
+    putMock.mockResolvedValue({ isRecord: false })
+    const isRecord = await useStore.getState().submitGameRecord('snake', 'medium', 10)
+    expect(isRecord).toBe(false)
+    expect(useStore.getState().gameRecords.snake.medium).toBeUndefined()
+  })
+
+  it('resetLocal() clears all collections', () => {
+    postMock.mockResolvedValue({} as Task)
+    useStore.getState().addTask({ title: 'X', priority: 'low', status: 'todo' })
+    useStore.getState().resetLocal()
     expect(useStore.getState().tasks).toHaveLength(0)
   })
-
-  it('migrates legacy lessons without type to weekly', async () => {
-    localStorage.setItem('study-dashboard:lessons', JSON.stringify([{ id: '1', title: 'Математика', weekday: 4, startTime: '09:00', endTime: '10:30' }]))
-    await useStore.persist.rehydrate()
-    expect(useStore.getState().lessons[0].type).toBe('weekly')
-  })
-
-  it('drops one-off lessons from a previous calendar week on load', async () => {
-    // 2026-08-06 is Thursday; week Monday is 2026-08-03
-    localStorage.setItem('study-dashboard:lessons', JSON.stringify([
-      { id: '1', type: 'once', title: 'Консультация', weekday: 0, startTime: '09:00', endTime: '10:00', date: '2026-08-02' }, // last Sunday — drop
-      { id: '2', type: 'once', title: 'Семинар', weekday: 4, startTime: '09:00', endTime: '10:00', date: '2026-08-06' },       // today — keep
-    ]))
-    await useStore.persist.rehydrate()
-    expect(useStore.getState().lessons.map((l) => l.id)).toEqual(['2'])
-  })
-
-  it('falls back to empty collections when stored JSON is corrupt', async () => {
-    localStorage.setItem('study-dashboard:lessons', '{not json')
-    localStorage.setItem('study-dashboard:tasks', '{not json')
-    await useStore.persist.rehydrate()
-    expect(useStore.getState().lessons).toEqual([])
-    expect(useStore.getState().tasks).toEqual([])
-  })
-
-  it('stores the first game record and returns true', () => {
-    const { submitGameRecord } = useStore.getState()
-    expect(submitGameRecord('memory', 'easy', 12)).toBe(true)
-    expect(useStore.getState().gameRecords.memory.easy).toBe(12)
-  })
-
-  it('does not replace a record with a worse value (memory = fewer is better)', () => {
-    const { submitGameRecord } = useStore.getState()
-    submitGameRecord('memory', 'easy', 12)
-    expect(submitGameRecord('memory', 'easy', 20)).toBe(false)
-    expect(useStore.getState().gameRecords.memory.easy).toBe(12)
-  })
-
-  it('replaces a record with a better value (memory = fewer is better)', () => {
-    const { submitGameRecord } = useStore.getState()
-    submitGameRecord('memory', 'easy', 12)
-    expect(submitGameRecord('memory', 'easy', 8)).toBe(true)
-    expect(useStore.getState().gameRecords.memory.easy).toBe(8)
-  })
-
-  it('treats snake as higher-is-better', () => {
-    const { submitGameRecord } = useStore.getState()
-    submitGameRecord('snake', 'medium', 10)
-    expect(submitGameRecord('snake', 'medium', 8)).toBe(false)
-    expect(useStore.getState().gameRecords.snake.medium).toBe(10)
-    expect(submitGameRecord('snake', 'medium', 15)).toBe(true)
-    expect(useStore.getState().gameRecords.snake.medium).toBe(15)
-  })
-
-  it('keeps records per difficulty separate', () => {
-    const { submitGameRecord } = useStore.getState()
-    submitGameRecord('minesweeper', 'easy', 30)
-    submitGameRecord('minesweeper', 'hard', 120)
-    expect(useStore.getState().gameRecords.minesweeper.easy).toBe(30)
-    expect(useStore.getState().gameRecords.minesweeper.hard).toBe(120)
-  })
-})
-
-afterEach(() => {
-  vi.useRealTimers()
 })
