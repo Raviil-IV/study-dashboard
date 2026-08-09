@@ -4,3 +4,5 @@ dist
 *.tsbuildinfo
 key.txt
 .env
+study-dashboard-images.tar
+study-dashboard-deploy.tar.gz
