@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   test: {
     environment: 'node',
+    fileParallelism: false,
     globalSetup: './test/globalSetup.ts',
     setupFiles: ['./test/setup.ts'],
     env: {

@@ -21,3 +21,22 @@ npm run dev
 ## Стек
 
 React 19, Vite 7, TypeScript, React Router, Tailwind CSS 4, Zustand, Vitest.
+
+## Запуск (Docker Compose, продакшен)
+
+```bash
+cp .env.example .env   # затем впиши свои POSTGRES_PASSWORD и JWT_SECRET
+docker compose up -d --build
+```
+
+Сайт доступен на порту 80; миграции БД применяются автоматически при старте backend.
+
+## Бэкенд (разработка)
+
+```bash
+cd backend
+npm install
+npm run dev        # tsx watch, порт 3000
+npm test           # требует PostgreSQL на localhost:5432 (см. план, Task 1)
+npm run build
+```
