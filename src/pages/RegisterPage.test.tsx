@@ -24,11 +24,11 @@ describe('RegisterPage', () => {
         </Routes>
       </MemoryRouter>,
     )
-    await userEvent.type(screen.getByLabelText('Email'), 'a@b.dev')
+    await userEvent.type(screen.getByLabelText('Логин'), 'alice')
     await userEvent.type(screen.getByLabelText('Пароль'), 'password123')
     await userEvent.type(screen.getByLabelText('Повторите пароль'), 'password123')
     await userEvent.click(screen.getByRole('button', { name: 'Зарегистрироваться' }))
-    expect(registerMock).toHaveBeenCalledWith('a@b.dev', 'password123')
+    expect(registerMock).toHaveBeenCalledWith('alice', 'password123')
     expect(await screen.findByText('Home page')).toBeInTheDocument()
   })
 
@@ -41,7 +41,7 @@ describe('RegisterPage', () => {
         </Routes>
       </MemoryRouter>,
     )
-    await userEvent.type(screen.getByLabelText('Email'), 'a@b.dev')
+    await userEvent.type(screen.getByLabelText('Логин'), 'alice')
     await userEvent.type(screen.getByLabelText('Пароль'), 'password123')
     await userEvent.type(screen.getByLabelText('Повторите пароль'), 'password124')
     await userEvent.click(screen.getByRole('button', { name: 'Зарегистрироваться' }))

@@ -29,7 +29,7 @@ beforeEach(() => {
 
 describe('useAuth', () => {
   it('check() authenticates and loads state', async () => {
-    mockedGet.mockResolvedValueOnce({ id: 'u1', email: 'a@b.dev' }).mockResolvedValueOnce({ lessons: [] })
+    mockedGet.mockResolvedValueOnce({ id: 'u1', login: 'alice' }).mockResolvedValueOnce({ lessons: [] })
     await useAuth.getState().check()
     expect(useAuth.getState().status).toBe('authed')
     expect(hydrateMock).toHaveBeenCalled()
@@ -57,16 +57,16 @@ describe('useAuth', () => {
   })
 
   it('login() authenticates and loads state', async () => {
-    mockedPost.mockResolvedValueOnce({ id: 'u1', email: 'a@b.dev' })
+    mockedPost.mockResolvedValueOnce({ id: 'u1', login: 'alice' })
     mockedGet.mockResolvedValueOnce({ lessons: [] })
-    await useAuth.getState().login('a@b.dev', 'password123')
+    await useAuth.getState().login('alice', 'password123')
     expect(useAuth.getState().status).toBe('authed')
-    expect(mockedPost).toHaveBeenCalledWith('/auth/login', { email: 'a@b.dev', password: 'password123' })
+    expect(mockedPost).toHaveBeenCalledWith('/auth/login', { login: 'alice', password: 'password123' })
   })
 
   it('login() propagates ApiError message', async () => {
-    mockedPost.mockRejectedValueOnce(new ApiError('Неверный email или пароль', 401))
-    await expect(useAuth.getState().login('a@b.dev', 'wrong')).rejects.toThrow('Неверный email или пароль')
+    mockedPost.mockRejectedValueOnce(new ApiError('Неверный логин или пароль', 401))
+    await expect(useAuth.getState().login('alice', 'wrong')).rejects.toThrow('Неверный логин или пароль')
   })
 
   it('logout() resets local state and returns to guest', async () => {

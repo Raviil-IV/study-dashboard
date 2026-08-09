@@ -1,8 +1,14 @@
 import { NavLink } from 'react-router-dom'
 import { NAV_ITEMS } from '../../lib/constants'
+import { useAuth } from '../../store/useAuth'
 import ThemeToggle from './ThemeToggle'
 
 export default function Sidebar() {
+  const user = useAuth((s) => s.user)
+  const handleLogout = () => {
+    void useAuth.getState().logout()
+  }
+
   return (
     <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 lg:flex">
       <div className="mb-6 flex items-center justify-between px-2">
@@ -41,6 +47,16 @@ export default function Sidebar() {
         <span className="text-base">⚙️</span>
         Настройки
       </NavLink>
+      <div className="mt-auto flex flex-col gap-1 border-t border-gray-200 pt-3 dark:border-gray-800">
+        <span className="truncate px-3 text-sm font-medium text-gray-600 dark:text-gray-400">{user?.login}</span>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+        >
+          <span className="text-base">⏻</span>
+          Выйти
+        </button>
+      </div>
     </aside>
   )
 }

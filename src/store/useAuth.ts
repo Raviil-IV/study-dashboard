@@ -6,11 +6,11 @@ import { useStore, type ServerState } from './useStore'
 export type AuthStatus = 'loading' | 'guest' | 'authed' | 'offline'
 
 interface AuthState {
-  user: { id: string; email: string } | null
+  user: { id: string; login: string } | null
   status: AuthStatus
   check: () => Promise<void>
-  login: (email: string, password: string) => Promise<void>
-  register: (email: string, password: string) => Promise<void>
+  login: (login: string, password: string) => Promise<void>
+  register: (login: string, password: string) => Promise<void>
   logout: () => Promise<void>
 }
 
@@ -21,7 +21,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   check: async () => {
     if (get().status !== 'loading') return
     try {
-      const user = await api.get<{ id: string; email: string }>('/auth/me')
+      const user = await api.get<{ id: string; login: string }>('/auth/me')
       const state = await api.get<ServerState>('/state')
       useStore.getState().hydrate(state)
       cacheState(state)
@@ -41,16 +41,16 @@ export const useAuth = create<AuthState>((set, get) => ({
     }
   },
 
-  login: async (email, password) => {
-    const user = await api.post<{ id: string; email: string }>('/auth/login', { email, password })
+  login: async (login, password) => {
+    const user = await api.post<{ id: string; login: string }>('/auth/login', { login, password })
     const state = await api.get<ServerState>('/state')
     useStore.getState().hydrate(state)
     cacheState(state)
     set({ user, status: 'authed' })
   },
 
-  register: async (email, password) => {
-    const user = await api.post<{ id: string; email: string }>('/auth/register', { email, password })
+  register: async (login, password) => {
+    const user = await api.post<{ id: string; login: string }>('/auth/register', { login, password })
     set({ user, status: 'authed' })
   },
 

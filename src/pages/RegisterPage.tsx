@@ -8,7 +8,7 @@ import Button from '../components/ui/Button'
 export default function RegisterPage() {
   const { register, status } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
+  const [login, setLogin] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +25,7 @@ export default function RegisterPage() {
     }
     setSubmitting(true)
     try {
-      await register(email, password)
+      await register(login, password)
       navigate('/', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Не удалось зарегистрироваться')
@@ -38,9 +38,9 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 dark:bg-gray-950">
       <Card title="Регистрация">
         <form onSubmit={onSubmit} className="space-y-4">
-          <Input label="Email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <Input label="Пароль" type="password" required minLength={8} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <Input label="Повторите пароль" type="password" required minLength={8} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+          <Input label="Логин" type="text" required autoComplete="username" value={login} onChange={(e) => setLogin(e.target.value)} />
+          <Input label="Пароль" type="password" required minLength={6} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input label="Повторите пароль" type="password" required minLength={6} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
           {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
           <Button type="submit" disabled={submitting} className="w-full">
             {submitting ? 'Регистрируем…' : 'Зарегистрироваться'}
