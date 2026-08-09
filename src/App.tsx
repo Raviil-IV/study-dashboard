@@ -1,5 +1,8 @@
 import { Routes, Route } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
+import ProtectedRoute from './components/layout/ProtectedRoute'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import SchedulePage from './pages/SchedulePage'
 import TasksPage from './pages/TasksPage'
@@ -15,18 +18,22 @@ import MinesweeperPage from './pages/MinesweeperPage'
 export default function App() {
   return (
     <Routes>
-      <Route element={<AppLayout />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="schedule" element={<SchedulePage />} />
-        <Route path="tasks" element={<TasksPage />} />
-        <Route path="deadlines" element={<DeadlinesPage />} />
-        <Route path="notes" element={<NotesPage />} />
-        <Route path="focus" element={<FocusPage />} />
-        <Route path="games" element={<GamesPage />} />
-        <Route path="games/memory" element={<MemoryPage />} />
-        <Route path="games/snake" element={<SnakePage />} />
-        <Route path="games/minesweeper" element={<MinesweeperPage />} />
-        <Route path="settings" element={<SettingsPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="schedule" element={<SchedulePage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="deadlines" element={<DeadlinesPage />} />
+          <Route path="notes" element={<NotesPage />} />
+          <Route path="focus" element={<FocusPage />} />
+          <Route path="games" element={<GamesPage />} />
+          <Route path="games/memory" element={<MemoryPage />} />
+          <Route path="games/snake" element={<SnakePage />} />
+          <Route path="games/minesweeper" element={<MinesweeperPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
       </Route>
     </Routes>
   )
