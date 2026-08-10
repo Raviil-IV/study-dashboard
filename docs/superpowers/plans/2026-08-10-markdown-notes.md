@@ -541,6 +541,7 @@ git commit -m "feat: add live markdown preview to note form"
 ### Task 5: NoteView modal + open from card
 
 **Files:**
+- Modify: `src/components/ui/IconButton.tsx` — widen `onClick` type to `(e: MouseEvent<HTMLButtonElement>) => void` (existing `() => void` callers stay valid; required so card buttons can `stopPropagation`)
 - Create: `src/components/notes/NoteView.tsx`
 - Modify: `src/components/notes/NoteCard.tsx`
 - Modify: `src/pages/NotesPage.tsx`
@@ -680,7 +681,7 @@ export default function NoteCard({
 }
 ```
 
-Note: `IconButton`'s `onClick` prop type is `() => void`; passing `(e) => { e.stopPropagation(); … }` is valid TypeScript (a function with extra params is assignable to a no-arg signature).
+Note: `IconButton`'s `onClick` prop type is widened in this task from `() => void` to `(e: MouseEvent<HTMLButtonElement>) => void` — the plan's original assumption (an arrow with a parameter being assignable to a no-arg signature) is wrong under strict `noImplicitAny`, so the root fix is the wider prop type. `IconButton.tsx` must be included in the commit.
 
 - [ ] **Step 5: Update `src/pages/NotesPage.tsx`**
 
