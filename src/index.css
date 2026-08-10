@@ -9,3 +9,120 @@ html, body, #root {
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
+
+/* --- Markdown rendering --- */
+.md-content {
+  line-height: 1.6;
+  word-break: break-word;
+}
+.md-content > :first-child { margin-top: 0; }
+.md-content > :last-child { margin-bottom: 0; }
+.md-content h1, .md-content h2, .md-content h3, .md-content h4 {
+  font-weight: 700;
+  margin: 1.25em 0 0.5em;
+  line-height: 1.3;
+}
+.md-content h1 { font-size: 1.4rem; }
+.md-content h2 { font-size: 1.2rem; }
+.md-content h3 { font-size: 1.05rem; }
+.md-content h4 { font-size: 1rem; }
+.md-content p { margin: 0.6em 0; }
+.md-content ul, .md-content ol { margin: 0.6em 0; padding-left: 1.4em; }
+.md-content ul { list-style: disc; }
+.md-content ol { list-style: decimal; }
+.md-content li { margin: 0.2em 0; }
+.md-content li > input[type='checkbox'] { margin-right: 0.4em; }
+.md-content a { color: #6366f1; text-decoration: underline; }
+.dark .md-content a { color: #818cf8; }
+.md-content blockquote {
+  border-left: 3px solid #e5e7eb;
+  padding-left: 0.9em;
+  color: #6b7280;
+  margin: 0.6em 0;
+}
+.dark .md-content blockquote { border-left-color: #4b5563; color: #9ca3af; }
+.md-content code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.875em;
+}
+.md-content :not(pre) > code {
+  background: #f3f4f6;
+  border-radius: 0.3em;
+  padding: 0.15em 0.35em;
+  color: #dc2626;
+}
+.dark .md-content :not(pre) > code { background: #1f2937; color: #f87171; }
+.md-content pre {
+  background: #f6f8fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.6em;
+  padding: 0.8em 1em;
+  overflow-x: auto;
+  margin: 0.8em 0;
+}
+.dark .md-content pre { background: #161b22; border-color: #30363d; }
+.md-content pre code.hljs {
+  display: block;
+  padding: 0;
+  background: transparent;
+}
+.md-content table { border-collapse: collapse; margin: 0.8em 0; width: 100%; }
+.md-content th, .md-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.4em 0.7em;
+  text-align: left;
+}
+.md-content th { background: #f9fafb; font-weight: 600; }
+.dark .md-content th, .dark .md-content td { border-color: #374151; }
+.dark .md-content th { background: #111827; }
+.md-content img { max-width: 100%; border-radius: 0.5em; }
+.md-content hr { border: 0; border-top: 1px solid #e5e7eb; margin: 1.2em 0; }
+.dark .md-content hr { border-top-color: #374151; }
+
+/* --- Syntax highlighting (hljs classes, light/dark via CSS vars) --- */
+:root {
+  --hljs-fg: #24292e;
+  --hljs-keyword: #d73a49;
+  --hljs-string: #032f62;
+  --hljs-comment: #6a737d;
+  --hljs-number: #005cc5;
+  --hljs-title: #6f42c1;
+  --hljs-attr: #005cc5;
+  --hljs-built-in: #e36209;
+  --hljs-symbol: #e36209;
+  --hljs-link: #005cc5;
+  --hljs-quote: #6a737d;
+  --hljs-section: #6f42c1;
+  --hljs-addition: #22863a;
+  --hljs-deletion: #b31d28;
+  --hljs-regexp: #032f62;
+}
+.dark {
+  --hljs-fg: #c9d1d9;
+  --hljs-keyword: #ff7b72;
+  --hljs-string: #a5d6ff;
+  --hljs-comment: #8b949e;
+  --hljs-number: #79c0ff;
+  --hljs-title: #d2a8ff;
+  --hljs-attr: #79c0ff;
+  --hljs-built-in: #ffa657;
+  --hljs-symbol: #ffa657;
+  --hljs-link: #79c0ff;
+  --hljs-quote: #8b949e;
+  --hljs-section: #d2a8ff;
+  --hljs-addition: #aff5b4;
+  --hljs-deletion: #ffdcd7;
+  --hljs-regexp: #a5d6ff;
+}
+.md-content pre code { color: var(--hljs-fg); }
+.md-content .hljs-keyword, .md-content .hljs-selector-tag { color: var(--hljs-keyword); }
+.md-content .hljs-string, .md-content .hljs-regexp, .md-content .hljs-addition { color: var(--hljs-string); }
+.md-content .hljs-comment, .md-content .hljs-quote, .md-content .hljs-meta { color: var(--hljs-comment); }
+.md-content .hljs-number, .md-content .hljs-literal, .md-content .hljs-attr,
+.md-content .hljs-attribute, .md-content .hljs-selector-attr, .md-content .hljs-template-variable { color: var(--hljs-number); }
+.md-content .hljs-title, .md-content .hljs-section { color: var(--hljs-title); }
+.md-content .hljs-built_in, .md-content .hljs-type, .md-content .hljs-symbol,
+.md-content .hljs-bullet, .md-content .hljs-variable { color: var(--hljs-built-in); }
+.md-content .hljs-link { color: var(--hljs-link); text-decoration: underline; }
+.md-content .hljs-emphasis { font-style: italic; }
+.md-content .hljs-strong { font-weight: 700; }
