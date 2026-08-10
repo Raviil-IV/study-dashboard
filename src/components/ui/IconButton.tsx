@@ -1,3 +1,5 @@
+import type { MouseEvent } from 'react'
+
 type IconName = 'edit' | 'trash' | 'pin' | 'close' | 'plus' | 'chevron-left' | 'chevron-right' | 'home' | 'calendar' | 'check' | 'alert' | 'note' | 'timer' | 'settings' | 'sun' | 'moon' | 'system'
 
 const icons: Record<IconName, string> = {
@@ -20,7 +22,7 @@ const icons: Record<IconName, string> = {
   system: '💻',
 }
 
-export default function IconButton({ name, label, onClick }: { name: IconName; label: string; onClick: () => void }) {
+export default function IconButton({ name, label, onClick }: { name: IconName; label: string; onClick: (e: MouseEvent<HTMLButtonElement>) => void }) {
   return (
     <button
       type="button"

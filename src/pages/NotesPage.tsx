@@ -8,6 +8,7 @@ import EmptyState from '../components/ui/EmptyState'
 import Input from '../components/ui/Input'
 import NoteForm, { type NoteFormValues } from '../components/notes/NoteForm'
 import NoteCard from '../components/notes/NoteCard'
+import NoteView from '../components/notes/NoteView'
 
 export default function NotesPage() {
   const notes = useStore((s) => s.notes)
@@ -18,6 +19,7 @@ export default function NotesPage() {
   const [query, setQuery] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Note | undefined>()
+  const [viewing, setViewing] = useState<Note | undefined>()
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -68,6 +70,7 @@ export default function NotesPage() {
             <NoteCard
               key={n.id}
               note={n}
+              onOpen={() => setViewing(n)}
               onEdit={() => { setEditing(n); setModalOpen(true) }}
               onDelete={() => handleDelete(n.id)}
               onTogglePin={() => togglePinNote(n.id)}
@@ -78,6 +81,17 @@ export default function NotesPage() {
       <Modal open={modalOpen} title={editing ? 'Редактировать заметку' : 'Новая заметка'} onClose={() => setModalOpen(false)}>
         <NoteForm key={editing?.id ?? 'new'} initial={editing} onSubmit={handleSubmit} onCancel={() => setModalOpen(false)} />
       </Modal>
+      {viewing && (
+        <NoteView
+          note={viewing}
+          onClose={() => setViewing(undefined)}
+          onEdit={() => {
+            setViewing(undefined)
+            setEditing(viewing)
+            setModalOpen(true)
+          }}
+        />
+      )}
     </div>
   )
 }
