@@ -27,7 +27,7 @@ authRouter.post('/register', authLimiter, async (req, res, next) => {
     const passwordHash = await hashPassword(password)
     const [user] = await db.insert(users).values({ login, passwordHash }).returning()
     setAuthCookie(res, user.id)
-    res.status(201).json({ id: user.id, login: user.login })
+    res.status(201).json({ id: user.id, login: user.login, role: user.role })
   } catch (err) {
     next(err)
   }
@@ -42,7 +42,7 @@ authRouter.post('/login', authLimiter, async (req, res, next) => {
       return
     }
     setAuthCookie(res, user.id)
-    res.json({ id: user.id, login: user.login })
+    res.json({ id: user.id, login: user.login, role: user.role })
   } catch (err) {
     next(err)
   }
@@ -60,7 +60,7 @@ authRouter.get('/me', requireAuth, async (req, res, next) => {
       res.status(401).json({ error: { code: 'UNAUTHORIZED', message: 'Пользователь не найден' } })
       return
     }
-    res.json({ id: user.id, login: user.login })
+    res.json({ id: user.id, login: user.login, role: user.role })
   } catch (err) {
     next(err)
   }
