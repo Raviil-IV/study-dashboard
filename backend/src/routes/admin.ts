@@ -3,9 +3,19 @@ import { desc, eq } from 'drizzle-orm'
 import { count } from 'drizzle-orm'
 import { db } from '../db/client'
 import { focusSessions, tasks, users } from '../db/schema'
+import { getGlobalStats, getTrend } from '../lib/stats'
 import { roleParamSchema, userIdParamSchema } from '../lib/validation'
 
 export const adminRouter = Router()
+
+adminRouter.get('/stats', async (_req, res, next) => {
+  try {
+    const [stats, trend] = await Promise.all([getGlobalStats(), getTrend(null)])
+    res.json({ ...stats, trend })
+  } catch (err) {
+    next(err)
+  }
+})
 
 adminRouter.get('/users', async (_req, res, next) => {
   try {
