@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import ProtectedRoute from './components/layout/ProtectedRoute'
+import AdminRoute from './components/layout/AdminRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
@@ -10,6 +11,7 @@ import DeadlinesPage from './pages/DeadlinesPage'
 import NotesPage from './pages/NotesPage'
 import FocusPage from './pages/FocusPage'
 import SettingsPage from './pages/SettingsPage'
+import AdminPage from './pages/AdminPage'
 import GamesPage from './pages/GamesPage'
 import MemoryPage from './pages/MemoryPage'
 import SnakePage from './pages/SnakePage'
@@ -33,6 +35,14 @@ export default function App() {
           <Route path="games/snake" element={<SnakePage />} />
           <Route path="games/minesweeper" element={<MinesweeperPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route
+            path="admin"
+            element={
+              <AdminRoute>
+                <AdminPage />
+              </AdminRoute>
+            }
+          />
         </Route>
       </Route>
     </Routes>
