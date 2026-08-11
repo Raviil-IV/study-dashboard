@@ -2,11 +2,12 @@ import { create } from 'zustand'
 import { api, ApiError } from '../lib/api'
 import { cacheState, loadCachedState } from '../lib/cache'
 import { useStore, type ServerState } from './useStore'
+import type { Role, User } from '../types'
 
 export type AuthStatus = 'loading' | 'guest' | 'authed' | 'offline'
 
 interface AuthState {
-  user: { id: string; login: string } | null
+  user: User | null
   status: AuthStatus
   check: () => Promise<void>
   login: (login: string, password: string) => Promise<void>
@@ -21,7 +22,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   check: async () => {
     if (get().status !== 'loading') return
     try {
-      const user = await api.get<{ id: string; login: string }>('/auth/me')
+      const user = await api.get<{ id: string; login: string; role: Role }>('/auth/me')
       const state = await api.get<ServerState>('/state')
       useStore.getState().hydrate(state)
       cacheState(state)
@@ -42,7 +43,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   login: async (login, password) => {
-    const user = await api.post<{ id: string; login: string }>('/auth/login', { login, password })
+    const user = await api.post<{ id: string; login: string; role: Role }>('/auth/login', { login, password })
     const state = await api.get<ServerState>('/state')
     useStore.getState().hydrate(state)
     cacheState(state)
@@ -50,7 +51,7 @@ export const useAuth = create<AuthState>((set, get) => ({
   },
 
   register: async (login, password) => {
-    const user = await api.post<{ id: string; login: string }>('/auth/register', { login, password })
+    const user = await api.post<{ id: string; login: string; role: Role }>('/auth/register', { login, password })
     set({ user, status: 'authed' })
   },
 
