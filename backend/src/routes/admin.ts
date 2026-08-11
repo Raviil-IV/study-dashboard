@@ -3,7 +3,7 @@ import { desc, eq } from 'drizzle-orm'
 import { count } from 'drizzle-orm'
 import { db } from '../db/client'
 import { focusSessions, tasks, users } from '../db/schema'
-import { getGlobalStats, getTrend } from '../lib/stats'
+import { getGlobalStats, getTrend, getUserStats } from '../lib/stats'
 import { roleParamSchema, userIdParamSchema } from '../lib/validation'
 
 export const adminRouter = Router()
@@ -55,6 +55,20 @@ adminRouter.patch('/users/:id/role', async (req, res, next) => {
       return
     }
     res.json(updated)
+  } catch (err) {
+    next(err)
+  }
+})
+
+adminRouter.get('/users/:id/stats', async (req, res, next) => {
+  try {
+    const { id } = userIdParamSchema.parse(req.params)
+    const stats = await getUserStats(id)
+    if (!stats) {
+      res.status(404).json({ error: { code: 'USER_NOT_FOUND', message: 'Пользователь не найден' } })
+      return
+    }
+    res.json(stats)
   } catch (err) {
     next(err)
   }

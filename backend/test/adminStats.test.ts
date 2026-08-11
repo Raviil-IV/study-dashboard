@@ -69,4 +69,62 @@ describe('admin stats', () => {
     expect(s.trend[28].focusMinutes).toBe(25)
     expect(s.trend[28].tasksDone).toBe(1)
   })
+
+  it('returns per-user stats', async () => {
+    const agent = createAgent()
+    const { res: regA } = await signUp(agent, 'boss')
+    await promoteToAdmin('boss')
+    const target = createAgent()
+    const { res: regB } = await signUp(target, 'student')
+
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+    await db.insert(tasks).values([
+      {
+        id: '44444444-4444-4444-8444-444444444444',
+        userId: regB.body.id,
+        title: 'done task',
+        priority: 'low',
+        status: 'done',
+        createdAt: yesterday,
+        completedAt: yesterday,
+      },
+      {
+        id: '55555555-5555-4555-8555-555555555555',
+        userId: regB.body.id,
+        title: 'in progress',
+        priority: 'high',
+        status: 'in-progress',
+        createdAt: yesterday,
+      },
+    ])
+    await db.insert(focusSessions).values([
+      {
+        id: '66666666-6666-4666-8666-666666666666',
+        userId: regB.body.id,
+        label: 'f',
+        startedAt: yesterday,
+        durationMinutes: 50,
+        completed: true,
+      },
+    ])
+
+    const res = await agent.get(`/api/admin/users/${regB.body.id}/stats`)
+    expect(res.status).toBe(200)
+    const s = res.body
+    expect(s.profile.login).toBe('student')
+    expect(s.profile.role).toBe('user')
+    expect(s.focus).toMatchObject({ totalSessions: 1, totalMinutes: 50, minutes30d: 50 })
+    expect(s.tasks).toMatchObject({ total: 2, done: 1, inProgress: 1, overdue: 0 })
+    expect(s.activity).toHaveLength(30)
+    expect(s.activity[28].tasksDone).toBe(1)
+  })
+
+  it('returns 404 for an unknown user', async () => {
+    const agent = createAgent()
+    await signUp(agent, 'boss')
+    await promoteToAdmin('boss')
+    const res = await agent.get('/api/admin/users/00000000-0000-0000-0000-000000000000/stats')
+    expect(res.status).toBe(404)
+    expect(res.body.error.code).toBe('USER_NOT_FOUND')
+  })
 })

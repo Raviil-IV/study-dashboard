@@ -1,5 +1,6 @@
-import { sql } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { db } from '../db/client'
+import { gameRecords, users } from '../db/schema'
 
 export interface TrendDay {
   day: string
@@ -118,4 +119,64 @@ export async function getTrend(userId: string | null): Promise<TrendDay[]> {
     days.push(byDay.get(key) ?? { day: key, focusMinutes: 0, tasksDone: 0 })
   }
   return days
+}
+
+export interface UserStatsResult {
+  profile: { id: string; login: string; role: 'user' | 'admin'; createdAt: string }
+  focus: { totalSessions: number; totalMinutes: number; minutes30d: number }
+  tasks: { total: number; done: number; inProgress: number; overdue: number }
+  deadlines: { upcoming: number; overdue: number }
+  notes: { total: number }
+  games: { game: string; difficulty: string; bestValue: number }[]
+  activity: TrendDay[]
+}
+
+export async function getUserStats(userId: string): Promise<UserStatsResult | null> {
+  const [profile] = await db
+    .select({ id: users.id, login: users.login, role: users.role, createdAt: users.createdAt })
+    .from(users)
+    .where(eq(users.id, userId))
+  if (!profile) return null
+
+  const [focusRow, taskRow, deadlineRow, notesRow] = await Promise.all([
+    db.execute(sql`
+      SELECT count(*)::int AS sessions,
+             COALESCE(sum(duration_minutes), 0)::int AS minutes,
+             COALESCE(sum(duration_minutes) FILTER (WHERE started_at >= now() - interval '30 days'), 0)::int AS minutes_30d
+      FROM focus_sessions WHERE user_id = ${userId}
+    `).then((res) => res.rows),
+    db.execute(sql`
+      SELECT count(*)::int AS total,
+             count(*) FILTER (WHERE status = 'done')::int AS done,
+             count(*) FILTER (WHERE status = 'in-progress')::int AS in_progress,
+             count(*) FILTER (WHERE status <> 'done' AND due_date < CURRENT_DATE)::int AS overdue
+      FROM tasks WHERE user_id = ${userId}
+    `).then((res) => res.rows),
+    db.execute(sql`
+      SELECT count(*) FILTER (WHERE date >= CURRENT_DATE AND date <= CURRENT_DATE + 7)::int AS upcoming,
+             count(*) FILTER (WHERE date < CURRENT_DATE)::int AS overdue
+      FROM deadlines WHERE user_id = ${userId}
+    `).then((res) => res.rows),
+    db.execute(sql`SELECT count(*)::int AS total FROM notes WHERE user_id = ${userId}`).then((res) => res.rows),
+  ])
+  const [gameRows, activity] = await Promise.all([
+    db
+      .select({ game: gameRecords.game, difficulty: gameRecords.difficulty, bestValue: gameRecords.bestValue })
+      .from(gameRecords)
+      .where(eq(gameRecords.userId, userId)),
+    getTrend(userId),
+  ])
+  const f = focusRow[0] as Record<string, number>
+  const t = taskRow[0] as Record<string, number>
+  const d = deadlineRow[0] as Record<string, number>
+  const n = notesRow[0] as Record<string, number>
+  return {
+    profile,
+    focus: { totalSessions: f.sessions, totalMinutes: f.minutes, minutes30d: f.minutes_30d },
+    tasks: { total: t.total, done: t.done, inProgress: t.in_progress, overdue: t.overdue },
+    deadlines: { upcoming: d.upcoming, overdue: d.overdue },
+    notes: { total: n.total },
+    games: gameRows,
+    activity,
+  }
 }
