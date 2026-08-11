@@ -94,3 +94,11 @@ export const gameRecordSchema = z.object({
   difficulty: z.enum(['easy', 'medium', 'hard']),
   value: z.number().int().min(0),
 })
+
+export const roleParamSchema = z.object({
+  role: z.enum(['user', 'admin']),
+})
+
+export const userIdParamSchema = z.object({
+  id: z.string().uuid(),
+})

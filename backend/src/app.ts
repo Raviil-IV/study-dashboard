@@ -8,6 +8,8 @@ import { createEntityRouter } from './routes/entities'
 import { deadlines, focusSessions, lessons, notes, tasks } from './db/schema'
 import { deadlineSchema, focusSessionSchema, lessonSchema, noteSchema, taskSchema } from './lib/validation'
 import { requireAuth } from './middleware/auth'
+import { requireAdmin } from './middleware/admin'
+import { adminRouter } from './routes/admin'
 import { errorHandler } from './middleware/error'
 
 export const app = express()
@@ -25,4 +27,5 @@ app.use('/api/notes', requireAuth, createEntityRouter(notes, noteSchema))
 app.use('/api/focus-sessions', requireAuth, createEntityRouter(focusSessions, focusSessionSchema))
 app.use('/api/settings', requireAuth, settingsRouter)
 app.use('/api/game-records', requireAuth, gameRecordsRouter)
+app.use('/api/admin', requireAuth, requireAdmin, adminRouter)
 app.use(errorHandler)
