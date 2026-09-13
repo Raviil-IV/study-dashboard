@@ -1,43 +1,74 @@
-export class ApiError extends Error {
-  status: number
-  code: string
+import { createLogger } from './logger'
 
-  constructor(message: string, status: number, code = 'ERROR') {
+const log = createLogger('API')
+
+export interface ApiOptions extends RequestInit {
+  json?: unknown
+}
+
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    public code: string,
+    message: string,
+  ) {
     super(message)
-    this.status = status
-    this.code = code
+    this.name = 'ApiError'
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`/api${path}`, {
-    credentials: 'same-origin',
-    ...options,
-    headers: options.body ? { 'Content-Type': 'application/json', ...options.headers } : options.headers,
+function dispatchAuthUnauthorized(): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+  }
+}
+
+async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
+  const { json, ...fetchOptions } = options
+
+  const fullPath = path.startsWith('/') ? `/api${path}` : path
+
+  log.debug(`request: ${fetchOptions.method ?? 'GET'} ${fullPath}`)
+
+  const res = await fetch(fullPath, {
+    ...fetchOptions,
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...fetchOptions.headers,
+    },
+    ...(json !== undefined && { body: JSON.stringify(json) }),
   })
-  if (res.status === 401) {
-    window.dispatchEvent(new Event('auth:unauthorized'))
-  }
+
   if (!res.ok) {
-    let message = 'Что-то пошло не так'
-    let code = 'ERROR'
-    try {
-      const body = (await res.json()) as { error?: { message?: string; code?: string } }
-      message = body.error?.message ?? message
-      code = body.error?.code ?? code
-    } catch {
-      // non-JSON error body
+    const body = await res.json().catch(() => ({}))
+    const message = body?.error?.message ?? res.statusText
+    const code = body?.error?.code ?? 'UNKNOWN'
+
+    if (res.status === 401) {
+      dispatchAuthUnauthorized()
     }
-    throw new ApiError(message, res.status, code)
+
+    log.warn('request failed', { status: res.status, code, message })
+    throw new ApiError(res.status, code, message)
   }
+
+  log.debug(`request completed: ${res.status}`)
+
   if (res.status === 204) return undefined as T
-  return res.json() as Promise<T>
+  return res.json()
+}
+
+function createMethod(method: string) {
+  return async <T>(path: string, json?: unknown, options?: Omit<ApiOptions, 'method' | 'json'>): Promise<T> => {
+    return request<T>(path, { ...options, method, json })
+  }
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, body: unknown) => request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
-  patch: <T>(path: string, body: unknown) => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
-  put: <T>(path: string, body: unknown) => request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
-  delete: <T = undefined>(path: string) => request<T>(path, { method: 'DELETE' }),
+  get: createMethod('GET'),
+  post: createMethod('POST'),
+  patch: createMethod('PATCH'),
+  put: createMethod('PUT'),
+  delete: createMethod('DELETE'),
 }

@@ -1,5 +1,8 @@
 import type { NextFunction, Request, Response } from 'express'
 import { ZodError } from 'zod'
+import { logger } from '../lib/logger'
+
+const log = logger.child({ module: 'error' })
 
 interface PgError {
   code?: string
@@ -15,6 +18,5 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     res.status(409).json({ error: { code: 'LOGIN_TAKEN', message: 'Логин уже занят' } })
     return
   }
-  console.error(err)
-  res.status(500).json({ error: { code: 'INTERNAL', message: 'Что-то пошло не так' } })
-}
+  log.error({ err }, 'internal error')
+  res.status(500).json({ error: { code: 'INTERNAL', message: 'Что-то пошло не так' } }) }

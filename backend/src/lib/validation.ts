@@ -23,7 +23,7 @@ export const loginSchema = z.object({
 
 export const lessonSchema = z
   .object({
-    id: z.string().uuid(),
+    id: z.string().uuid().optional(),
     title: z.string().trim().min(1, 'Укажите название занятия'),
     type: z.enum(['weekly', 'once']),
     weekday: z.number().int().min(0).max(6),
@@ -40,7 +40,7 @@ export const lessonSchema = z
   })
 
 export const taskSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().uuid().optional(),
   title: z.string().trim().min(1, 'Укажите название задачи'),
   subject: z.string().trim().max(200).optional(),
   description: z.string().trim().max(5000).optional(),
@@ -52,7 +52,7 @@ export const taskSchema = z.object({
 })
 
 export const deadlineSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().uuid().optional(),
   title: z.string().trim().min(1, 'Укажите название дедлайна'),
   type: z.enum(['exam', 'test', 'project', 'homework', 'other']),
   subject: z.string().trim().max(200).optional(),
@@ -63,7 +63,7 @@ export const deadlineSchema = z.object({
 })
 
 export const noteSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().uuid().optional(),
   title: z.string().trim().min(1, 'Укажите название заметки'),
   subject: z.string().trim().max(200).optional(),
   content: z.string(),
@@ -74,7 +74,7 @@ export const noteSchema = z.object({
 })
 
 export const focusSessionSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().uuid().optional(),
   label: z.string().trim().max(200).optional(),
   subject: z.string().trim().max(200).optional(),
   startedAt: z.string(),

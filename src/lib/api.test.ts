@@ -10,7 +10,7 @@ describe('api client', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ hello: 'world' }) }))
     const result = await api.get<{ hello: string }>('/state')
     expect(result).toEqual({ hello: 'world' })
-    expect(fetch).toHaveBeenCalledWith('/api/state', expect.objectContaining({ credentials: 'same-origin' }))
+    expect(fetch).toHaveBeenCalledWith('/api/state', expect.objectContaining({ credentials: 'include' }))
   })
 
   it('throws ApiError with the server message', async () => {

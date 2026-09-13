@@ -8,13 +8,17 @@ import { createEntityRouter } from './routes/entities'
 import { deadlines, focusSessions, lessons, notes, tasks } from './db/schema'
 import { deadlineSchema, focusSessionSchema, lessonSchema, noteSchema, taskSchema } from './lib/validation'
 import { requireAuth } from './middleware/auth'
+import { requestLogger } from './middleware/requestLogger'
 import { errorHandler } from './middleware/error'
 
 export const app = express()
 
+app.set('trust proxy', 1)
+
 app.disable('x-powered-by')
 app.use(express.json())
 app.use(cookieParser())
+app.use(requestLogger)
 
 app.use('/api/auth', authRouter)
 app.use('/api/state', requireAuth, stateRouter)

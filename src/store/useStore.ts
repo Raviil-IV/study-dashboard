@@ -5,6 +5,9 @@ import { EMPTY_GAME_RECORDS } from '../lib/games/types'
 import { api } from '../lib/api'
 import { notifyError } from '../lib/toast'
 import { uid } from '../lib/id'
+import { createLogger } from '../lib/logger'
+
+const log = createLogger('Store')
 
 export type TaskInput = Omit<Task, 'id' | 'createdAt'>
 export type NoteInput = Omit<Note, 'id' | 'createdAt' | 'updatedAt'>
@@ -60,6 +63,7 @@ export const useStore = create<StoreState>((set, get) => ({
   addLesson: (input) => {
     const lesson = { ...input, id: uid() }
     set((s) => ({ lessons: [...s.lessons, lesson] }))
+    log.info('lesson added locally', { lessonId: lesson.id })
     void api.post<Lesson>('/lessons', lesson).catch((err) => {
       set((s) => ({ lessons: s.lessons.filter((l) => l.id !== lesson.id) }))
       notifyError(err)
@@ -69,6 +73,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const prev = get().lessons.find((l) => l.id === id)
     set((s) => ({ lessons: s.lessons.map((l) => (l.id === id ? { ...l, ...patch } : l)) }))
     if (prev) {
+      log.info('lesson updated locally', { lessonId: id })
       void api.patch<Lesson>(`/lessons/${id}`, patch).catch((err) => {
         set((s) => ({ lessons: rollback(s.lessons, id, prev) }))
         notifyError(err)
@@ -78,6 +83,7 @@ export const useStore = create<StoreState>((set, get) => ({
   removeLesson: (id) => {
     const prev = get().lessons
     set((s) => ({ lessons: s.lessons.filter((l) => l.id !== id) }))
+    log.info('lesson removed locally', { lessonId: id })
     void api.delete(`/lessons/${id}`).catch((err) => {
       set({ lessons: prev })
       notifyError(err)
@@ -87,6 +93,7 @@ export const useStore = create<StoreState>((set, get) => ({
   addTask: (input) => {
     const task: Task = { ...input, id: uid(), createdAt: new Date().toISOString() }
     set((s) => ({ tasks: [...s.tasks, task] }))
+    log.info('task added locally', { taskId: task.id })
     void api.post<Task>('/tasks', task).catch((err) => {
       set((s) => ({ tasks: s.tasks.filter((t) => t.id !== task.id) }))
       notifyError(err)
@@ -96,6 +103,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const prev = get().tasks.find((t) => t.id === id)
     set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }))
     if (prev) {
+      log.info('task updated locally', { taskId: id })
       void api.patch<Task>(`/tasks/${id}`, patch).catch((err) => {
         set((s) => ({ tasks: rollback(s.tasks, id, prev) }))
         notifyError(err)
@@ -105,6 +113,7 @@ export const useStore = create<StoreState>((set, get) => ({
   removeTask: (id) => {
     const prev = get().tasks
     set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }))
+    log.info('task removed locally', { taskId: id })
     void api.delete(`/tasks/${id}`).catch((err) => {
       set({ tasks: prev })
       notifyError(err)
@@ -117,6 +126,7 @@ export const useStore = create<StoreState>((set, get) => ({
       ? { status: 'todo' as const, completedAt: undefined }
       : { status: 'done' as const, completedAt: new Date().toISOString() }
     set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }))
+    log.info('task toggled locally', { taskId: id, newStatus: patch.status })
     void api.patch<Task>(`/tasks/${id}`, patch).catch((err) => {
       set((s) => ({ tasks: rollback(s.tasks, id, task) }))
       notifyError(err)
@@ -126,6 +136,7 @@ export const useStore = create<StoreState>((set, get) => ({
   addDeadline: (input) => {
     const deadline: Deadline = { ...input, id: uid(), createdAt: new Date().toISOString() }
     set((s) => ({ deadlines: [...s.deadlines, deadline] }))
+    log.info('deadline added locally', { deadlineId: deadline.id })
     void api.post<Deadline>('/deadlines', deadline).catch((err) => {
       set((s) => ({ deadlines: s.deadlines.filter((d) => d.id !== deadline.id) }))
       notifyError(err)
@@ -135,6 +146,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const prev = get().deadlines.find((d) => d.id === id)
     set((s) => ({ deadlines: s.deadlines.map((d) => (d.id === id ? { ...d, ...patch } : d)) }))
     if (prev) {
+      log.info('deadline updated locally', { deadlineId: id })
       void api.patch<Deadline>(`/deadlines/${id}`, patch).catch((err) => {
         set((s) => ({ deadlines: rollback(s.deadlines, id, prev) }))
         notifyError(err)
@@ -144,6 +156,7 @@ export const useStore = create<StoreState>((set, get) => ({
   removeDeadline: (id) => {
     const prev = get().deadlines
     set((s) => ({ deadlines: s.deadlines.filter((d) => d.id !== id) }))
+    log.info('deadline removed locally', { deadlineId: id })
     void api.delete(`/deadlines/${id}`).catch((err) => {
       set({ deadlines: prev })
       notifyError(err)
@@ -154,6 +167,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const now = new Date().toISOString()
     const note: Note = { ...input, id: uid(), createdAt: now, updatedAt: now }
     set((s) => ({ notes: [...s.notes, note] }))
+    log.info('note added locally', { noteId: note.id })
     void api.post<Note>('/notes', note).catch((err) => {
       set((s) => ({ notes: s.notes.filter((n) => n.id !== note.id) }))
       notifyError(err)
@@ -164,6 +178,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const nextPatch = { ...patch, updatedAt: new Date().toISOString() }
     set((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, ...nextPatch } : n)) }))
     if (prev) {
+      log.info('note updated locally', { noteId: id })
       void api.patch<Note>(`/notes/${id}`, nextPatch).catch((err) => {
         set((s) => ({ notes: rollback(s.notes, id, prev) }))
         notifyError(err)
@@ -173,6 +188,7 @@ export const useStore = create<StoreState>((set, get) => ({
   removeNote: (id) => {
     const prev = get().notes
     set((s) => ({ notes: s.notes.filter((n) => n.id !== id) }))
+    log.info('note removed locally', { noteId: id })
     void api.delete(`/notes/${id}`).catch((err) => {
       set({ notes: prev })
       notifyError(err)
@@ -183,6 +199,7 @@ export const useStore = create<StoreState>((set, get) => ({
     if (!prev) return
     set((s) => ({ notes: s.notes.map((n) => (n.id === id ? { ...n, pinned: !n.pinned } : n)) }))
     const pinned = !prev.pinned
+    log.info('note pinned toggled locally', { noteId: id, pinned })
     void api.patch<Note>(`/notes/${id}`, { pinned }).catch((err) => {
       set((s) => ({ notes: rollback(s.notes, id, prev) }))
       notifyError(err)
@@ -192,6 +209,7 @@ export const useStore = create<StoreState>((set, get) => ({
   addFocusSession: (input) => {
     const session: FocusSession = { ...input, id: uid(), startedAt: new Date().toISOString() }
     set((s) => ({ focusSessions: [...s.focusSessions, session] }))
+    log.info('focus session added locally', { sessionId: session.id })
     void api.post<FocusSession>('/focus-sessions', session).catch((err) => {
       set((s) => ({ focusSessions: s.focusSessions.filter((f) => f.id !== session.id) }))
       notifyError(err)
@@ -202,6 +220,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const prev = get().settings
     const next = { ...prev, ...patch }
     set({ settings: next })
+    log.info('settings updated locally', { changes: patch })
     void api.put<Settings>('/settings', next).catch((err) => {
       set({ settings: prev })
       notifyError(err)
@@ -210,6 +229,7 @@ export const useStore = create<StoreState>((set, get) => ({
 
   submitGameRecord: async (game, difficulty, value) => {
     try {
+      log.info('submitting game record', { game, difficulty, value })
       const { isRecord } = await api.put<{ isRecord: boolean }>('/game-records', { game, difficulty, value })
       if (isRecord) {
         set((s) => ({

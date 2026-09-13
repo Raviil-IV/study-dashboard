@@ -37,7 +37,7 @@ describe('useAuth', () => {
   })
 
   it('check() goes to guest on 401', async () => {
-    mockedGet.mockRejectedValueOnce(new ApiError('Требуется вход', 401))
+    mockedGet.mockRejectedValueOnce(new ApiError(401, 'UNAUTHORIZED', 'Требуется вход'))
     await useAuth.getState().check()
     expect(useAuth.getState().status).toBe('guest')
   })
@@ -65,7 +65,7 @@ describe('useAuth', () => {
   })
 
   it('login() propagates ApiError message', async () => {
-    mockedPost.mockRejectedValueOnce(new ApiError('Неверный логин или пароль', 401))
+    mockedPost.mockRejectedValueOnce(new ApiError(401, 'INVALID_CREDENTIALS', 'Неверный логин или пароль'))
     await expect(useAuth.getState().login('alice', 'wrong')).rejects.toThrow('Неверный логин или пароль')
   })
 
