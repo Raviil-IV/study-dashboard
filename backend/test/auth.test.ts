@@ -59,4 +59,27 @@ describe('auth', () => {
     const res = await agent.get('/api/auth/me')
     expect(res.status).toBe(401)
   })
+
+  it('returns role in /me response', async () => {
+    const agent = createAgent()
+    await signUp(agent, 'roleuser')
+    const res = await agent.get('/api/auth/me')
+    expect(res.status).toBe(200)
+    expect(res.body.role).toBe('user')
+  })
+
+  it('returns role on login', async () => {
+    const agent = createAgent()
+    await signUp(agent, 'loginrole')
+    const res = await agent.post('/api/auth/login').send({ login: 'loginrole', password: 'password123' })
+    expect(res.status).toBe(200)
+    expect(res.body.role).toBe('user')
+  })
+
+  it('returns role on register', async () => {
+    const agent = createAgent()
+    const res = await agent.post('/api/auth/register').send({ login: 'regrole', password: 'password123' })
+    expect(res.status).toBe(201)
+    expect(res.body.role).toBe('user')
+  })
 })

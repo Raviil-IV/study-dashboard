@@ -31,7 +31,7 @@ authRouter.post('/register', authLimiter, async (req, res, next) => {
     const [user] = await db.insert(users).values({ login, passwordHash }).returning()
     setAuthCookie(res, user.id)
     log.info({ userId: user.id, login }, 'user registered')
-    res.status(201).json({ id: user.id, login: user.login })
+    res.status(201).json({ id: user.id, login: user.login, role: user.role })
   } catch (err) {
     next(err)
   }
@@ -48,7 +48,7 @@ authRouter.post('/login', authLimiter, async (req, res, next) => {
     }
     setAuthCookie(res, user.id)
     log.info({ userId: user.id, login }, 'user logged in')
-    res.json({ id: user.id, login: user.login })
+    res.json({ id: user.id, login: user.login, role: user.role })
   } catch (err) {
     next(err)
   }
@@ -68,7 +68,7 @@ authRouter.get('/me', requireAuth, async (req, res, next) => {
       return
     }
     log.debug({ userId: user.id }, 'user fetched')
-    res.json({ id: user.id, login: user.login })
+    res.json({ id: user.id, login: user.login, role: user.role })
   } catch (err) {
     next(err)
   }

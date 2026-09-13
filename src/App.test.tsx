@@ -4,8 +4,8 @@ import { vi } from 'vitest'
 import App from './App'
 
 vi.mock('./store/useAuth', () => ({
-  useAuth: (selector: (s: { user: { id: string; login: string } | null; status: string }) => unknown) =>
-    selector({ user: { id: 'u1', login: 'alice' }, status: 'authed' }),
+  useAuth: (selector: (s: { user: { id: string; login: string; role: string } | null; status: string }) => unknown) =>
+    selector({ user: { id: 'u1', login: 'alice', role: 'admin' }, status: 'authed' }),
 }))
 
 test('renders nav labels for an authenticated user', () => {

@@ -40,3 +40,13 @@ npm run dev        # tsx watch, порт 3000
 npm test           # требует PostgreSQL на localhost:5432 (см. план, Task 1)
 npm run build
 ```
+
+## Админ-панель
+
+Роль `admin` выдаётся в админ-панели (`/admin`) тем, кто уже админ. Первому администратору роль назначается вручную в БД:
+
+```bash
+psql "$DATABASE_URL" -c "UPDATE users SET role = 'admin' WHERE login = 'твой_логин';"
+```
+
+Доступ к `/api/admin/*` и странице `/admin` — только для роли `admin`; админ не может снять роль сам с себя.

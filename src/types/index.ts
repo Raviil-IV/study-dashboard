@@ -60,3 +60,11 @@ export interface Settings {
   pomodoroShortBreakMinutes: number
   pomodoroLongBreakMinutes: number
 }
+
+export type Role = 'user' | 'admin'
+
+export interface User {
+  id: string
+  login: string
+  role: Role
+}

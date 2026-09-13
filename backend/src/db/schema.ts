@@ -16,6 +16,7 @@ import {
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   login: text('login').unique().notNull(),
+  role: text('role', { enum: ['user', 'admin'] }).notNull().default('user'),
   passwordHash: text('password_hash').notNull(),
   createdAt: timestamp('created_at', { mode: 'string', withTimezone: true }).notNull().defaultNow(),
 })
