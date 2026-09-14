@@ -78,7 +78,7 @@ export default function NotesPage() {
           ))}
         </ul>
       )}
-      <Modal open={modalOpen} title={editing ? 'Редактировать заметку' : 'Новая заметка'} onClose={() => setModalOpen(false)}>
+      <Modal open={modalOpen} size="4xl" title={editing ? 'Редактировать заметку' : 'Новая заметка'} onClose={() => setModalOpen(false)}>
         <NoteForm key={editing?.id ?? 'new'} initial={editing} onSubmit={handleSubmit} onCancel={() => setModalOpen(false)} />
       </Modal>
       {viewing && (

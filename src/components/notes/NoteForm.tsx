@@ -46,10 +46,10 @@ export default function NoteForm({ initial, onSubmit, onCancel }: { initial?: No
   const editor = (
     <Textarea
       label="Содержимое"
-      rows={12}
+      rows={16}
       value={values.content}
       onChange={(e) => setValues({ ...values, content: e.target.value })}
-      className="min-h-[300px] font-mono"
+      className="min-h-[420px] font-mono"
     />
   )
 
