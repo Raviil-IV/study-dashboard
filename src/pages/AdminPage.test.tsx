@@ -21,7 +21,6 @@ const stats: AdminStats = {
   newUsers7d: 1,
   newUsers30d: 2,
   activeUsers7d: 1,
-  activeUsers30d: 2,
   focusMinutes7d: 25,
   focusMinutes30d: 50,
   avgSessionMinutes: 25,
@@ -37,8 +36,8 @@ const stats: AdminStats = {
 }
 
 const users: AdminUser[] = [
-  { id: 'u1', login: 'boss', role: 'admin', createdAt: '2026-01-01T00:00:00.000Z', taskCount: 3, sessionCount: 5 },
-  { id: 'u2', login: 'student', role: 'user', createdAt: '2026-02-01T00:00:00.000Z', taskCount: 1, sessionCount: 0 },
+  { id: 'u1', login: 'boss', role: 'admin', createdAt: '2026-01-01T00:00:00.000Z', taskCount: 3, visitCount: 5 },
+  { id: 'u2', login: 'student', role: 'user', createdAt: '2026-02-01T00:00:00.000Z', taskCount: 1, visitCount: 0 },
 ]
 
 beforeEach(() => {
@@ -68,5 +67,18 @@ describe('AdminPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Пользователи' }))
     expect(await screen.findByText('student')).toBeInTheDocument()
     expect(screen.getByText('boss')).toBeInTheDocument()
+  })
+
+  it('deletes a user after confirmation and removes them from the list', async () => {
+    vi.mocked(api.delete).mockResolvedValueOnce({ id: 'u2' })
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: 'Пользователи' }))
+    await user.click(screen.getAllByRole('button', { name: 'Удалить' })[1])
+    expect(api.delete).toHaveBeenCalledWith('/admin/users/u2')
+    expect(screen.queryByText('student')).not.toBeInTheDocument()
+    expect(screen.getByText('boss')).toBeInTheDocument()
+    vi.restoreAllMocks()
   })
 })

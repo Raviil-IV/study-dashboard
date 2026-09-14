@@ -1,10 +1,10 @@
-import { eq, sql } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { db } from '../db/client'
-import { gameRecords, users } from '../db/schema'
+import { deadlines, focusSessions, gameRecords, lessons, notes, tasks, users, visits } from '../db/schema'
 
 export interface TrendDay {
   day: string
-  focusMinutes: number
+  visits: number
   tasksDone: number
 }
 
@@ -13,7 +13,6 @@ export interface GlobalStats {
   newUsers7d: number
   newUsers30d: number
   activeUsers7d: number
-  activeUsers30d: number
   focusMinutes7d: number
   focusMinutes30d: number
   avgSessionMinutes: number
@@ -39,16 +38,7 @@ export async function getGlobalStats(): Promise<GlobalStats> {
       (SELECT count(*)::int FROM users) AS total_users,
       (SELECT count(*)::int FROM users WHERE created_at >= now() - interval '7 days') AS new_users_7d,
       (SELECT count(*)::int FROM users WHERE created_at >= now() - interval '30 days') AS new_users_30d,
-      (SELECT count(DISTINCT user_id)::int FROM (
-          SELECT user_id FROM focus_sessions WHERE started_at >= now() - interval '7 days'
-          UNION
-          SELECT user_id FROM tasks WHERE created_at >= now() - interval '7 days' OR completed_at >= now() - interval '7 days'
-        ) act7) AS active_users_7d,
-      (SELECT count(DISTINCT user_id)::int FROM (
-          SELECT user_id FROM focus_sessions WHERE started_at >= now() - interval '30 days'
-          UNION
-          SELECT user_id FROM tasks WHERE created_at >= now() - interval '30 days' OR completed_at >= now() - interval '30 days'
-        ) act30) AS active_users_30d,
+      (SELECT count(DISTINCT user_id)::int FROM visits WHERE visited_at >= now() - interval '7 days') AS active_users_7d,
       (SELECT COALESCE(sum(duration_minutes), 0)::int FROM focus_sessions WHERE completed AND started_at >= now() - interval '7 days') AS focus_minutes_7d,
       (SELECT COALESCE(sum(duration_minutes), 0)::int FROM focus_sessions WHERE completed AND started_at >= now() - interval '30 days') AS focus_minutes_30d,
       (SELECT COALESCE(round(avg(duration_minutes)), 0)::int FROM focus_sessions WHERE completed) AS avg_session_minutes,
@@ -69,7 +59,6 @@ export async function getGlobalStats(): Promise<GlobalStats> {
     newUsers7d: r.new_users_7d,
     newUsers30d: r.new_users_30d,
     activeUsers7d: r.active_users_7d,
-    activeUsers30d: r.active_users_30d,
     focusMinutes7d: r.focus_minutes_7d,
     focusMinutes30d: r.focus_minutes_30d,
     avgSessionMinutes: r.avg_session_minutes,
@@ -86,37 +75,37 @@ export async function getGlobalStats(): Promise<GlobalStats> {
 
 export async function getTrend(userId: string | null): Promise<TrendDay[]> {
   const scope = userId ? sql`WHERE user_id = ${userId} AND` : sql`WHERE`
-  const [focusRows, taskRows] = await Promise.all([
+  const [visitRows, taskRows] = await Promise.all([
     db.execute(sql`
-      SELECT to_char(date_trunc('day', started_at), 'YYYY-MM-DD') AS day,
-             COALESCE(sum(duration_minutes), 0)::int AS minutes
-      FROM focus_sessions
-      ${scope} completed AND started_at >= now() - interval '30 days'
+      SELECT to_char(date_trunc('day', visited_at), 'YYYY-MM-DD') AS day,
+             count(*)::int AS visits
+      FROM visits
+      ${scope} visited_at >= now() - interval '7 days'
       GROUP BY 1
     `).then((res) => res.rows),
     db.execute(sql`
       SELECT to_char(date_trunc('day', completed_at), 'YYYY-MM-DD') AS day,
              count(*)::int AS done
       FROM tasks
-      ${scope} completed_at IS NOT NULL AND completed_at >= now() - interval '30 days'
+      ${scope} completed_at IS NOT NULL AND completed_at >= now() - interval '7 days'
       GROUP BY 1
     `).then((res) => res.rows),
   ])
   const byDay = new Map<string, TrendDay>()
-  for (const r of focusRows as { day: string; minutes: number }[]) {
-    byDay.set(r.day, { day: r.day, focusMinutes: r.minutes, tasksDone: 0 })
+  for (const r of visitRows as { day: string; visits: number }[]) {
+    byDay.set(r.day, { day: r.day, visits: r.visits, tasksDone: 0 })
   }
   for (const r of taskRows as { day: string; done: number }[]) {
-    const cur = byDay.get(r.day) ?? { day: r.day, focusMinutes: 0, tasksDone: 0 }
+    const cur = byDay.get(r.day) ?? { day: r.day, visits: 0, tasksDone: 0 }
     cur.tasksDone = r.done
     byDay.set(r.day, cur)
   }
   const days: TrendDay[] = []
-  for (let i = 29; i >= 0; i--) {
+  for (let i = 6; i >= 0; i--) {
     const d = new Date()
     d.setDate(d.getDate() - i)
     const key = toIsoDate(d)
-    days.push(byDay.get(key) ?? { day: key, focusMinutes: 0, tasksDone: 0 })
+    days.push(byDay.get(key) ?? { day: key, visits: 0, tasksDone: 0 })
   }
   return days
 }
@@ -129,6 +118,52 @@ export interface UserStatsResult {
   notes: { total: number }
   games: { game: string; difficulty: string; bestValue: number }[]
   activity: TrendDay[]
+  content: {
+    tasks: {
+      id: string
+      title: string
+      subject: string | null
+      priority: string
+      status: string
+      dueDate: string | null
+      createdAt: string
+      completedAt: string | null
+    }[]
+    deadlines: {
+      id: string
+      title: string
+      type: string
+      subject: string | null
+      date: string
+      time: string | null
+    }[]
+    notes: {
+      id: string
+      title: string
+      subject: string | null
+      content: string
+      tags: string[]
+      updatedAt: string
+    }[]
+    lessons: {
+      id: string
+      title: string
+      type: string
+      weekday: number
+      startTime: string
+      endTime: string
+      location: string | null
+      color: string | null
+    }[]
+    focus: {
+      id: string
+      label: string | null
+      subject: string | null
+      startedAt: string
+      durationMinutes: number
+      completed: boolean
+    }[]
+  }
 }
 
 export async function getUserStats(userId: string): Promise<UserStatsResult | null> {
@@ -159,13 +194,80 @@ export async function getUserStats(userId: string): Promise<UserStatsResult | nu
     `).then((res) => res.rows),
     db.execute(sql`SELECT count(*)::int AS total FROM notes WHERE user_id = ${userId}`).then((res) => res.rows),
   ])
-  const [gameRows, activity] = await Promise.all([
+  const [gameRows, activity, contentRows] = await Promise.all([
     db
       .select({ game: gameRecords.game, difficulty: gameRecords.difficulty, bestValue: gameRecords.bestValue })
       .from(gameRecords)
       .where(eq(gameRecords.userId, userId)),
     getTrend(userId),
+    Promise.all([
+      db
+        .select({
+          id: tasks.id,
+          title: tasks.title,
+          subject: tasks.subject,
+          priority: tasks.priority,
+          status: tasks.status,
+          dueDate: tasks.dueDate,
+          createdAt: tasks.createdAt,
+          completedAt: tasks.completedAt,
+        })
+        .from(tasks)
+        .where(eq(tasks.userId, userId))
+        .orderBy(desc(tasks.createdAt)),
+      db
+        .select({
+          id: deadlines.id,
+          title: deadlines.title,
+          type: deadlines.type,
+          subject: deadlines.subject,
+          date: deadlines.date,
+          time: deadlines.time,
+        })
+        .from(deadlines)
+        .where(eq(deadlines.userId, userId))
+        .orderBy(deadlines.date),
+      db
+        .select({
+          id: notes.id,
+          title: notes.title,
+          subject: notes.subject,
+          content: notes.content,
+          tags: notes.tags,
+          updatedAt: notes.updatedAt,
+        })
+        .from(notes)
+        .where(eq(notes.userId, userId))
+        .orderBy(desc(notes.updatedAt)),
+      db
+        .select({
+          id: lessons.id,
+          title: lessons.title,
+          type: lessons.type,
+          weekday: lessons.weekday,
+          startTime: lessons.startTime,
+          endTime: lessons.endTime,
+          location: lessons.location,
+          color: lessons.color,
+        })
+        .from(lessons)
+        .where(eq(lessons.userId, userId))
+        .orderBy(lessons.weekday, lessons.startTime),
+      db
+        .select({
+          id: focusSessions.id,
+          label: focusSessions.label,
+          subject: focusSessions.subject,
+          startedAt: focusSessions.startedAt,
+          durationMinutes: focusSessions.durationMinutes,
+          completed: focusSessions.completed,
+        })
+        .from(focusSessions)
+        .where(eq(focusSessions.userId, userId))
+        .orderBy(desc(focusSessions.startedAt)),
+    ]),
   ])
+  const [taskRows, deadlineRows, noteRows, lessonRows, focusRows] = contentRows
   const f = focusRow[0] as Record<string, number>
   const t = taskRow[0] as Record<string, number>
   const d = deadlineRow[0] as Record<string, number>
@@ -178,5 +280,12 @@ export async function getUserStats(userId: string): Promise<UserStatsResult | nu
     notes: { total: n.total },
     games: gameRows,
     activity,
+    content: {
+      tasks: taskRows,
+      deadlines: deadlineRows,
+      notes: noteRows,
+      lessons: lessonRows,
+      focus: focusRows,
+    },
   }
 }

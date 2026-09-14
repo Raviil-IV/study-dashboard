@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import request from 'supertest'
+import { eq } from 'drizzle-orm'
 import { app } from '../src/app'
+import { db } from '../src/db/client'
+import { visits } from '../src/db/schema'
 import { createAgent, signUp } from './helpers'
 
 describe('auth', () => {
@@ -81,5 +84,38 @@ describe('auth', () => {
     const res = await agent.post('/api/auth/register').send({ login: 'regrole', password: 'password123' })
     expect(res.status).toBe(201)
     expect(res.body.role).toBe('user')
+  })
+
+  it('records a visit on register', async () => {
+    const agent = createAgent()
+    const { res } = await signUp(agent, 'visitreg')
+    const rows = await db.select().from(visits).where(eq(visits.userId, res.body.id))
+    expect(rows).toHaveLength(1)
+  })
+
+  it('records a visit on login', async () => {
+    const agent = createAgent()
+    const { res } = await signUp(agent, 'visitlogin')
+    await agent.post('/api/auth/login').send({ login: 'visitlogin', password: 'password123' })
+    const rows = await db.select().from(visits).where(eq(visits.userId, res.body.id))
+    expect(rows).toHaveLength(2)
+  })
+
+  it('records a visit on every /me call', async () => {
+    const agent = createAgent()
+    const { res } = await signUp(agent, 'visitme')
+    const me = await agent.get('/api/auth/me')
+    expect(me.status).toBe(200)
+    await agent.get('/api/auth/me')
+    const rows = await db.select().from(visits).where(eq(visits.userId, res.body.id))
+    expect(rows).toHaveLength(3)
+  })
+
+  it('does not record a visit on failed login', async () => {
+    const agent = createAgent()
+    const { res } = await signUp(agent, 'visitfail')
+    await agent.post('/api/auth/login').send({ login: 'visitfail', password: 'wrong-password' })
+    const rows = await db.select().from(visits).where(eq(visits.userId, res.body.id))
+    expect(rows).toHaveLength(1)
   })
 })

@@ -5,7 +5,7 @@ export default function StatsCards({ stats }: { stats: AdminStats }) {
   const items = [
     { label: 'Пользователей', value: stats.totalUsers },
     { label: 'Новых за 7 дней', value: stats.newUsers7d },
-    { label: 'Активных за 30 дней', value: stats.activeUsers30d },
+    { label: 'Активных за 7 дней', value: stats.activeUsers7d },
     { label: 'Фокус-минут за 30 дней', value: stats.focusMinutes30d },
     { label: 'Средняя сессия, мин', value: stats.avgSessionMinutes },
     { label: 'Задач выполнено, %', value: stats.tasksDonePercent },

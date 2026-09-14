@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import request from 'supertest'
 import { app } from '../src/app'
 import { db } from '../src/db/client'
-import { focusSessions, tasks } from '../src/db/schema'
+import { focusSessions, tasks, visits } from '../src/db/schema'
 import { createAgent, promoteToAdmin, signUp } from './helpers'
 
 describe('admin stats', () => {
@@ -51,6 +51,13 @@ describe('admin stats', () => {
         completed: true,
       },
     ])
+    await db.insert(visits).values([
+      {
+        id: '77777777-7777-4777-8777-777777777777',
+        userId: regA.body.id,
+        visitedAt: yesterday,
+      },
+    ])
 
     const res = await agent.get('/api/admin/stats')
     expect(res.status).toBe(200)
@@ -63,11 +70,12 @@ describe('admin stats', () => {
     expect(s.tasksDone).toBe(1)
     expect(s.tasksDonePercent).toBe(50)
     expect(s.tasksOverdue).toBe(1)
-    expect(s.activeUsers30d).toBe(1)
+    expect(s.activeUsers7d).toBe(2)
+    expect(s.activeUsers30d).toBeUndefined()
     expect(s.notesTotal).toBe(0)
-    expect(s.trend).toHaveLength(30)
-    expect(s.trend[28].focusMinutes).toBe(25)
-    expect(s.trend[28].tasksDone).toBe(1)
+    expect(s.trend).toHaveLength(7)
+    expect(s.trend[5].visits).toBe(1)
+    expect(s.trend[5].tasksDone).toBe(1)
   })
 
   it('returns per-user stats', async () => {
@@ -107,6 +115,13 @@ describe('admin stats', () => {
         completed: true,
       },
     ])
+    await db.insert(visits).values([
+      {
+        id: '88888888-8888-4888-8888-888888888888',
+        userId: regB.body.id,
+        visitedAt: yesterday,
+      },
+    ])
 
     const res = await agent.get(`/api/admin/users/${regB.body.id}/stats`)
     expect(res.status).toBe(200)
@@ -115,8 +130,16 @@ describe('admin stats', () => {
     expect(s.profile.role).toBe('user')
     expect(s.focus).toMatchObject({ totalSessions: 1, totalMinutes: 50, minutes30d: 50 })
     expect(s.tasks).toMatchObject({ total: 2, done: 1, inProgress: 1, overdue: 0 })
-    expect(s.activity).toHaveLength(30)
-    expect(s.activity[28].tasksDone).toBe(1)
+    expect(s.activity).toHaveLength(7)
+    expect(s.activity[5].visits).toBe(1)
+    expect(s.activity[5].tasksDone).toBe(1)
+    expect(s.content.tasks).toHaveLength(2)
+    expect(s.content.tasks.map((t: { title: string }) => t.title).sort()).toEqual(['done task', 'in progress'])
+    expect(s.content.focus).toHaveLength(1)
+    expect(s.content.focus[0]).toMatchObject({ durationMinutes: 50, completed: true })
+    expect(s.content.deadlines).toEqual([])
+    expect(s.content.notes).toEqual([])
+    expect(s.content.lessons).toEqual([])
   })
 
   it('returns 404 for an unknown user', async () => {

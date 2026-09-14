@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { desc, eq } from 'drizzle-orm'
 import { count } from 'drizzle-orm'
 import { db } from '../db/client'
-import { focusSessions, tasks, users } from '../db/schema'
+import { tasks, users, visits } from '../db/schema'
 import { getGlobalStats, getTrend, getUserStats } from '../lib/stats'
 import { roleParamSchema, userIdParamSchema } from '../lib/validation'
 
@@ -19,21 +19,21 @@ adminRouter.get('/stats', async (_req, res, next) => {
 
 adminRouter.get('/users', async (_req, res, next) => {
   try {
-    const [userRows, taskCounts, sessionCounts] = await Promise.all([
+    const [userRows, taskCounts, visitCounts] = await Promise.all([
       db
         .select({ id: users.id, login: users.login, role: users.role, createdAt: users.createdAt })
         .from(users)
         .orderBy(desc(users.createdAt)),
       db.select({ userId: tasks.userId, n: count(tasks.id) }).from(tasks).groupBy(tasks.userId),
-      db.select({ userId: focusSessions.userId, n: count(focusSessions.id) }).from(focusSessions).groupBy(focusSessions.userId),
+      db.select({ userId: visits.userId, n: count(visits.id) }).from(visits).groupBy(visits.userId),
     ])
     const taskMap = new Map(taskCounts.map((r) => [r.userId, Number(r.n)]))
-    const sessionMap = new Map(sessionCounts.map((r) => [r.userId, Number(r.n)]))
+    const visitMap = new Map(visitCounts.map((r) => [r.userId, Number(r.n)]))
     res.json(
       userRows.map((u) => ({
         ...u,
         taskCount: taskMap.get(u.id) ?? 0,
-        sessionCount: sessionMap.get(u.id) ?? 0,
+        visitCount: visitMap.get(u.id) ?? 0,
       })),
     )
   } catch (err) {
@@ -69,6 +69,24 @@ adminRouter.get('/users/:id/stats', async (req, res, next) => {
       return
     }
     res.json(stats)
+  } catch (err) {
+    next(err)
+  }
+})
+
+adminRouter.delete('/users/:id', async (req, res, next) => {
+  try {
+    const { id } = userIdParamSchema.parse(req.params)
+    if (id === req.userId) {
+      res.status(403).json({ error: { code: 'SELF_DELETE', message: 'Нельзя удалить самого себя' } })
+      return
+    }
+    const [deleted] = await db.delete(users).where(eq(users.id, id)).returning({ id: users.id })
+    if (!deleted) {
+      res.status(404).json({ error: { code: 'USER_NOT_FOUND', message: 'Пользователь не найден' } })
+      return
+    }
+    res.json(deleted)
   } catch (err) {
     next(err)
   }

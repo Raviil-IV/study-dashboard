@@ -4,7 +4,7 @@ import ActivityChart from './ActivityChart'
 
 const data = Array.from({ length: 30 }, (_, i) => ({
   day: `2026-01-${String(i + 1).padStart(2, '0')}`,
-  focusMinutes: i % 5 === 0 ? 25 : 0,
+  visits: i % 5 === 0 ? 2 : 0,
   tasksDone: i % 3 === 0 ? 1 : 0,
 }))
 

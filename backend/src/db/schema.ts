@@ -121,3 +121,13 @@ export const gameRecords = pgTable(
   },
   (t) => [uniqueIndex('game_records_user_game_difficulty_idx').on(t.userId, t.game, t.difficulty)],
 )
+
+export const visits = pgTable(
+  'visits',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    visitedAt: timestamp('visited_at', { mode: 'string', withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('visits_user_idx').on(t.userId)],
+)

@@ -61,6 +61,16 @@ export default function AdminPage() {
     }
   }
 
+  const deleteUser = async (u: AdminUser) => {
+    try {
+      await api.delete(`/admin/users/${u.id}`)
+      setUsers((list) => list.filter((item) => item.id !== u.id))
+      setSelected((cur) => (cur && cur.profile.id === u.id ? null : cur))
+    } catch (err) {
+      notifyError(err)
+    }
+  }
+
   return (
     <div>
       <PageHeader title="Админ-панель" subtitle="Статистика платформы и управление ролями" />
@@ -88,14 +98,14 @@ export default function AdminPage() {
         <div className="space-y-4">
           {stats && <StatsCards stats={stats} />}
           {stats && stats.trend.length > 0 && (
-            <Card title="Активность за 30 дней (фокус-минуты и задачи)">
+            <Card title="Активность за 7 дней (заходы и задачи)">
               <ActivityChart data={stats.trend} />
             </Card>
           )}
         </div>
       ) : (
         <Card>
-          <UsersTable users={users} onOpen={(u) => void openUser(u)} onToggleRole={(u) => void toggleRole(u)} />
+          <UsersTable users={users} onOpen={(u) => void openUser(u)} onToggleRole={(u) => void toggleRole(u)} onDelete={(u) => void deleteUser(u)} />
         </Card>
       )}
     </div>

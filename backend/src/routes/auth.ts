@@ -2,7 +2,7 @@ import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
-import { users } from '../db/schema'
+import { users, visits } from '../db/schema'
 import { loginSchema, registerSchema } from '../lib/validation'
 import { hashPassword, verifyPassword } from '../lib/password'
 import { clearAuthCookie, setAuthCookie } from '../lib/cookies'
@@ -29,6 +29,7 @@ authRouter.post('/register', authLimiter, async (req, res, next) => {
     }
     const passwordHash = await hashPassword(password)
     const [user] = await db.insert(users).values({ login, passwordHash }).returning()
+    await db.insert(visits).values({ userId: user.id })
     setAuthCookie(res, user.id)
     log.info({ userId: user.id, login }, 'user registered')
     res.status(201).json({ id: user.id, login: user.login, role: user.role })
@@ -47,6 +48,7 @@ authRouter.post('/login', authLimiter, async (req, res, next) => {
       return
     }
     setAuthCookie(res, user.id)
+    await db.insert(visits).values({ userId: user.id })
     log.info({ userId: user.id, login }, 'user logged in')
     res.json({ id: user.id, login: user.login, role: user.role })
   } catch (err) {
@@ -68,6 +70,7 @@ authRouter.get('/me', requireAuth, async (req, res, next) => {
       return
     }
     log.debug({ userId: user.id }, 'user fetched')
+    await db.insert(visits).values({ userId: user.id })
     res.json({ id: user.id, login: user.login, role: user.role })
   } catch (err) {
     next(err)
