@@ -78,3 +78,36 @@ describe('NotesPage', () => {
     expect(note?.pinned).toBe(true)
   })
 })
+
+describe('NotesPage markdown view', () => {
+  const mdNote = () => ({
+    id: '3',
+    title: 'Конспект по ТС',
+    subject: 'Информатика',
+    content: '# Вступление',
+    tags: [] as string[],
+    pinned: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  })
+
+  it('opens the note view on card click and renders markdown', async () => {
+    const user = userEvent.setup()
+    useStore.setState({ ...base, notes: [mdNote()] })
+    renderPage()
+    await user.click(screen.getByText('Конспект по ТС'))
+    expect(screen.getByRole('heading', { name: 'Вступление', level: 1 })).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('button', { name: 'Редактировать' })).toBeInTheDocument()
+  })
+
+  it('opens the edit form from the note view', async () => {
+    const user = userEvent.setup()
+    useStore.setState({ ...base, notes: [mdNote()] })
+    renderPage()
+    await user.click(screen.getByText('Конспект по ТС'))
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('button', { name: 'Редактировать' }))
+    expect(screen.getByLabelText('Заголовок')).toHaveValue('Конспект по ТС')
+  })
+})
