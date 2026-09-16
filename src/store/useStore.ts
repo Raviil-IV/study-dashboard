@@ -23,6 +23,8 @@ export interface StoreState {
   addLesson: (input: Omit<Lesson, 'id'>) => void
   updateLesson: (id: string, patch: Partial<Lesson>) => void
   removeLesson: (id: string) => void
+  applyRanepaImport: (url: string, lessons: Lesson[]) => void
+  removeRanepaImports: () => void
   addTask: (input: TaskInput) => void
   updateTask: (id: string, patch: Partial<Task>) => void
   removeTask: (id: string) => void
@@ -85,6 +87,23 @@ export const useStore = create<StoreState>((set, get) => ({
     set((s) => ({ lessons: s.lessons.filter((l) => l.id !== id) }))
     log.info('lesson removed locally', { lessonId: id })
     void api.delete(`/lessons/${id}`).catch((err) => {
+      set({ lessons: prev })
+      notifyError(err)
+    })
+  },
+
+  applyRanepaImport: (url, imported) => {
+    set((s) => ({
+      lessons: [...s.lessons.filter((l) => l.sourceUrl !== url), ...imported],
+    }))
+    log.info('ranepa import applied', { url, count: imported.length })
+  },
+
+  removeRanepaImports: () => {
+    const prev = get().lessons
+    set((s) => ({ lessons: s.lessons.filter((l) => !l.sourceUrl) }))
+    log.info('ranepa imports removed locally')
+    void api.delete('/ranepa/import').catch((err) => {
       set({ lessons: prev })
       notifyError(err)
     })

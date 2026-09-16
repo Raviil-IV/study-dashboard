@@ -1,0 +1,1 @@
+ALTER TABLE "ranepa_imports" ADD COLUMN "groups" jsonb DEFAULT '[]'::jsonb NOT NULL;

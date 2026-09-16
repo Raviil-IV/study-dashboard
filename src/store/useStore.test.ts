@@ -108,4 +108,49 @@ describe('useStore', () => {
     useStore.getState().resetLocal()
     expect(useStore.getState().tasks).toHaveLength(0)
   })
+
+  it('applyRanepaImport replaces imported lessons of the source and keeps the rest', () => {
+    const url = 'https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/'
+    useStore.setState({
+      lessons: [
+        { id: 'imp1', title: 'Старая пара', type: 'once', weekday: 5, startTime: '18:30', endTime: '19:50', date: '2026-09-04', sourceUrl: url },
+        { id: 'man1', title: 'Моя пара', type: 'weekly', weekday: 1, startTime: '09:00', endTime: '10:30' },
+      ],
+    })
+
+    useStore.getState().applyRanepaImport(url, [
+      { id: 'imp2', title: 'Новая пара', type: 'once', weekday: 5, startTime: '18:30', endTime: '19:50', date: '2026-09-04', sourceUrl: url },
+    ])
+
+    expect(useStore.getState().lessons.map((l) => l.title).sort()).toEqual(['Моя пара', 'Новая пара'])
+  })
+
+  it('removeRanepaImports deletes imported lessons and calls the server', () => {
+    deleteMock.mockResolvedValue(undefined)
+    useStore.setState({
+      lessons: [
+        { id: 'imp1', title: 'Импортированная', type: 'once', weekday: 5, startTime: '18:30', endTime: '19:50', date: '2026-09-04', sourceUrl: 'https://spb.ranepa.ru/raspisanie/x/' },
+        { id: 'man1', title: 'Моя пара', type: 'weekly', weekday: 1, startTime: '09:00', endTime: '10:30' },
+      ],
+    })
+
+    useStore.getState().removeRanepaImports()
+
+    expect(useStore.getState().lessons.map((l) => l.title)).toEqual(['Моя пара'])
+    expect(deleteMock).toHaveBeenCalledWith('/ranepa/import')
+  })
+
+  it('removeRanepaImports rolls back when the server rejects', async () => {
+    deleteMock.mockRejectedValue(new Error('fail'))
+    useStore.setState({
+      lessons: [
+        { id: 'imp1', title: 'Импортированная', type: 'once', weekday: 5, startTime: '18:30', endTime: '19:50', date: '2026-09-04', sourceUrl: 'https://spb.ranepa.ru/raspisanie/x/' },
+      ],
+    })
+
+    useStore.getState().removeRanepaImports()
+    expect(useStore.getState().lessons).toHaveLength(0)
+
+    await vi.waitFor(() => expect(useStore.getState().lessons).toHaveLength(1))
+  })
 })

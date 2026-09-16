@@ -11,6 +11,7 @@ import { requireAuth } from './middleware/auth'
 import { requestLogger } from './middleware/requestLogger'
 import { requireAdmin } from './middleware/admin'
 import { adminRouter } from './routes/admin'
+import { ranepaRouter } from './routes/ranepa'
 import { errorHandler } from './middleware/error'
 
 export const app = express()
@@ -32,4 +33,5 @@ app.use('/api/focus-sessions', requireAuth, createEntityRouter(focusSessions, fo
 app.use('/api/settings', requireAuth, settingsRouter)
 app.use('/api/game-records', requireAuth, gameRecordsRouter)
 app.use('/api/admin', requireAuth, requireAdmin, adminRouter)
+app.use('/api/ranepa', requireAuth, ranepaRouter)
 app.use(errorHandler)

@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  primaryKey,
 } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
@@ -35,6 +36,7 @@ export const lessons = pgTable(
     location: text('location'),
     note: text('note'),
     color: varchar('color', { length: 20 }),
+    sourceUrl: text('source_url'),
   },
   (t) => [index('lessons_user_idx').on(t.userId)],
 )
@@ -130,4 +132,16 @@ export const visits = pgTable(
     visitedAt: timestamp('visited_at', { mode: 'string', withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('visits_user_idx').on(t.userId)],
+)
+
+export const ranepaImports = pgTable(
+  'ranepa_imports',
+  {
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    groupName: text('group_name'),
+    syncedAt: timestamp('synced_at', { mode: 'string', withTimezone: true }).notNull().defaultNow(),
+    groups: jsonb('groups').$type<string[]>().notNull().default([]),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.url] })],
 )
