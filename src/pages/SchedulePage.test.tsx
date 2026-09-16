@@ -4,6 +4,9 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import SchedulePage from './SchedulePage'
 import { useStore } from '../store/useStore'
+import { api } from '../lib/api'
+
+const { showToastMock } = vi.hoisted(() => ({ showToastMock: vi.fn() }))
 
 vi.mock('../lib/api', () => ({
   api: {
@@ -14,6 +17,13 @@ vi.mock('../lib/api', () => ({
     delete: vi.fn().mockResolvedValue(undefined),
   },
 }))
+
+vi.mock('../lib/toast', () => ({
+  notifyError: vi.fn(),
+  useToast: { getState: () => ({ show: showToastMock }) },
+}))
+
+const URL_RANEPA = 'https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/'
 
 function renderPage() {
   return render(
@@ -158,6 +168,127 @@ describe('SchedulePage', () => {
     await user.click(screen.getByRole('button', { name: 'Месяц' }))
     await user.click(screen.getAllByRole('button', { name: /Математика/ })[0])
     expect(screen.getByText('Редактировать занятие')).toBeInTheDocument()
+  })
+
+  it('shows the ranepa import button and opens the import modal', async () => {
+    vi.clearAllMocks()
+    vi.mocked(api.get).mockResolvedValue({ imports: [] })
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Импорт из РАНХиГС' }))
+
+    expect(screen.getByLabelText(/ссылка на расписание/i)).toBeInTheDocument()
+  })
+
+  it('labels the import button «Обновить из РАНХиГС» when an import exists', async () => {
+    vi.clearAllMocks()
+    vi.mocked(api.get).mockResolvedValue({
+      imports: [{ url: URL_RANEPA, groupName: 'БИ-4-26-02', syncedAt: new Date().toISOString() }],
+    })
+    renderPage()
+
+    expect(await screen.findByRole('button', { name: 'Обновить из РАНХиГС' })).toBeInTheDocument()
+  })
+
+  it('auto-refreshes imports older than 24 hours when the page opens', async () => {
+    vi.clearAllMocks()
+    vi.mocked(api.get).mockResolvedValue({
+      imports: [{ url: URL_RANEPA, groupName: 'БИ-4-26-02', syncedAt: '2026-08-04T12:00:00.000Z' }],
+    })
+    vi.mocked(api.post).mockResolvedValue({
+      groupName: 'БИ-4-26-02',
+      count: 1,
+      lessons: [{ id: 'imp9', title: 'Свежая пара', type: 'once', weekday: 5, startTime: '18:30', endTime: '19:50', date: '2026-09-04', sourceUrl: URL_RANEPA }],
+    })
+    renderPage()
+
+    await vi.waitFor(() => expect(api.post).toHaveBeenCalledWith('/ranepa/import', { url: URL_RANEPA }))
+    expect(useStore.getState().lessons.some((l) => l.title === 'Свежая пара')).toBe(true)
+    expect(showToastMock).toHaveBeenCalledWith('Расписание обновлено: 1 занятие')
+  })
+
+  it('does not refresh fresh imports when the page opens', async () => {
+    vi.clearAllMocks()
+    vi.mocked(api.get).mockResolvedValue({
+      imports: [{ url: URL_RANEPA, groupName: 'БИ-4-26-02', syncedAt: new Date().toISOString() }],
+    })
+    renderPage()
+
+    await vi.waitFor(() => expect(api.get).toHaveBeenCalledWith('/ranepa/status'))
+    expect(api.post).not.toHaveBeenCalled()
+  })
+
+  it('auto-refresh passes stored group filters', async () => {
+    vi.clearAllMocks()
+    vi.mocked(api.get).mockResolvedValue({
+      imports: [{ url: URL_RANEPA, groupName: 'БИ-3-24-03-04', syncedAt: '2026-08-04T12:00:00.000Z', groups: ['БИ-3-24-04'] }],
+    })
+    vi.mocked(api.post).mockResolvedValue({ groupName: 'БИ-3-24-03-04', count: 1, lessons: [] })
+    renderPage()
+
+    await vi.waitFor(() => expect(api.post).toHaveBeenCalledWith('/ranepa/import', { url: URL_RANEPA, groups: ['БИ-3-24-04'] }))
+  })
+
+  it('shows the delete-import button only when an import exists', async () => {
+    vi.clearAllMocks()
+    vi.mocked(api.get).mockResolvedValue({ imports: [] })
+    renderPage()
+    await vi.waitFor(() => expect(api.get).toHaveBeenCalledWith('/ranepa/status'))
+
+    expect(screen.queryByRole('button', { name: 'Удалить импорт' })).not.toBeInTheDocument()
+  })
+
+  it('deletes the imported schedule on confirmation', async () => {
+    vi.clearAllMocks()
+    vi.mocked(api.get).mockResolvedValue({
+      imports: [{ url: URL_RANEPA, groupName: 'БИ-4-26-02', syncedAt: new Date().toISOString(), groups: [] }],
+    })
+    vi.mocked(api.delete).mockResolvedValue(undefined)
+    useStore.setState({
+      lessons: [
+        { id: 'imp1', title: 'Импортированная', type: 'once', weekday: 5, startTime: '18:30', endTime: '19:50', date: '2026-09-04', sourceUrl: URL_RANEPA },
+        { id: 'man1', title: 'Моя пара', type: 'weekly', weekday: 1, startTime: '09:00', endTime: '10:30' },
+      ],
+    })
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(await screen.findByRole('button', { name: 'Удалить импорт' }))
+
+    await vi.waitFor(() => expect(api.delete).toHaveBeenCalledWith('/ranepa/import'))
+    expect(useStore.getState().lessons.map((l) => l.title)).toEqual(['Моя пара'])
+    expect(showToastMock).toHaveBeenCalledWith('Импортированное расписание удалено')
+    expect(screen.queryByRole('button', { name: 'Удалить импорт' })).not.toBeInTheDocument()
+  })
+
+  it('imports a schedule through the modal and applies the lessons', async () => {
+    vi.clearAllMocks()
+    vi.mocked(api.get).mockResolvedValue({ imports: [] })
+    vi.mocked(api.post)
+      .mockResolvedValueOnce({
+        groupName: 'БИ-4-26-02',
+        count: 1,
+        firstDate: '2026-09-04',
+        lastDate: '2026-09-04',
+        lessons: [],
+      })
+      .mockResolvedValueOnce({
+        groupName: 'БИ-4-26-02',
+        count: 1,
+        lessons: [{ id: 'imp7', title: 'Пара из РАНХиГС', type: 'once', weekday: 5, startTime: '18:30', endTime: '19:50', date: '2026-09-04', sourceUrl: URL_RANEPA }],
+      })
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.click(screen.getByRole('button', { name: 'Импорт из РАНХиГС' }))
+    await user.type(screen.getByLabelText(/ссылка на расписание/i), URL_RANEPA)
+    await user.click(screen.getByRole('button', { name: 'Загрузить' }))
+    await user.click(await screen.findByRole('button', { name: 'Импортировать' }))
+
+    await vi.waitFor(() => expect(useStore.getState().lessons.some((l) => l.sourceUrl === URL_RANEPA)).toBe(true))
+    expect(screen.queryByLabelText(/ссылка на расписание/i)).not.toBeInTheDocument()
   })
 })
 

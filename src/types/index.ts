@@ -9,6 +9,7 @@ export interface Lesson {
   location?: string
   note?: string
   color?: string
+  sourceUrl?: string // ссылка на страницу расписания РАНХиГС, из которой занятие импортировано
 }
 
 export interface Task {
@@ -59,6 +60,42 @@ export interface Settings {
   pomodoroWorkMinutes: number
   pomodoroShortBreakMinutes: number
   pomodoroLongBreakMinutes: number
+}
+
+export interface RanepaImportStatus {
+  url: string
+  groupName?: string
+  syncedAt: string // ISO datetime
+  groups: string[] // сохранённый фильтр групп (пусто = все)
+}
+
+export interface RanepaInvalidLesson {
+  title: string
+  startTime: string
+  endTime: string
+  type?: string
+  teacher?: string
+  location?: string
+  rawDay: string
+  rawMonth: string
+  reason: 'malformed' | 'date_not_exists'
+  rawGroup: string
+}
+
+export interface RanepaGroupOption {
+  rawGroup: string
+  count: number
+  invalidCount: number
+}
+
+export interface RanepaPreview {
+  groupName: string
+  count: number
+  firstDate?: string
+  lastDate?: string
+  lessons: Lesson[]
+  invalid: RanepaInvalidLesson[]
+  groups: RanepaGroupOption[]
 }
 
 export type Role = 'user' | 'admin'
