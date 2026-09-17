@@ -4,13 +4,17 @@ import Sidebar from './Sidebar'
 import BottomNav from './BottomNav'
 import ThemeToggle from './ThemeToggle'
 import OfflineBanner from './OfflineBanner'
+import FloatingTimer from '../focus/FloatingTimer'
 import { useAuth } from '../../store/useAuth'
 import { useToast } from '../../lib/toast'
+import { usePomodoroEngine } from '../../hooks/usePomodoroEngine'
 
 export default function AppLayout() {
   const toastMessage = useToast((s) => s.message)
   const hideToast = useToast((s) => s.hide)
   const user = useAuth((s) => s.user)
+
+  usePomodoroEngine()
 
   const handleLogout = () => {
     void useAuth.getState().logout()
@@ -45,6 +49,7 @@ export default function AppLayout() {
         </main>
       </div>
       <BottomNav />
+      <FloatingTimer />
       {toastMessage && (
         <div
           role="alert"
