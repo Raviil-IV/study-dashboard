@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useStore } from '../store/useStore'
-import { daysUntil, isToday } from '../lib/date'
+import { daysUntil, isLessonOnDate, isToday } from '../lib/date'
 import { WEEKDAYS } from '../lib/constants'
 import StatsBar from '../components/dashboard/StatsBar'
 import TodayTasksCard from '../components/dashboard/TodayTasksCard'
@@ -19,7 +19,7 @@ export default function DashboardPage() {
 
   const stats = useMemo(() => {
     const tasksToday = tasks.filter((t) => t.status !== 'done' && t.dueDate && isToday(t.dueDate)).length
-    const lessonsToday = lessons.filter((l) => l.weekday === now.getDay()).length
+    const lessonsToday = lessons.filter((l) => isLessonOnDate(l, now)).length
     const deadlinesSoon = deadlines.filter((d) => daysUntil(d.date) >= 0 && daysUntil(d.date) <= 7).length
     const doneToday = focusSessions.filter((s) => s.completed).length
     return { tasksToday, lessonsToday, deadlinesSoon, doneToday }

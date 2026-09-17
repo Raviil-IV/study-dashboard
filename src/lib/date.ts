@@ -28,6 +28,11 @@ export function isToday(date: string): boolean {
   return date === toISODate(new Date())
 }
 
+/** Есть ли занятие в конкретный день: разовое — только в свою дату, регулярное — по дню недели */
+export function isLessonOnDate(lesson: { type?: 'weekly' | 'once'; date?: string; weekday: number }, date: Date): boolean {
+  return lesson.type === 'once' ? lesson.date === toISODate(date) : lesson.weekday === date.getDay()
+}
+
 export function isOverdue(date: string): boolean {
   return date < toISODate(new Date())
 }
