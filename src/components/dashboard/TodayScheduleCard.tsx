@@ -1,14 +1,12 @@
 import { Link } from 'react-router-dom'
 import type { Lesson } from '../../types'
-import { isLessonNow } from '../../lib/date'
+import { isLessonNow, isLessonOnDate } from '../../lib/date'
 import { COLOR_CLASSES } from '../../lib/constants'
 import Card from '../ui/Card'
 
 export default function TodayScheduleCard({ lessons }: { lessons: Lesson[] }) {
-  const today = new Date().getDay()
-  const todays = lessons
-    .filter((l) => l.weekday === today)
-    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+  const today = new Date()
+  const todays = lessons.filter((l) => isLessonOnDate(l, today)).sort((a, b) => a.startTime.localeCompare(b.startTime))
   return (
     <Card title="Расписание на сегодня" action={<Link to="/schedule" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">Всё расписание →</Link>}>
       {todays.length === 0 ? (

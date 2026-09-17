@@ -1,5 +1,5 @@
 import type { Lesson } from '../../types'
-import { toISODate } from '../../lib/date'
+import { isLessonOnDate, toISODate } from '../../lib/date'
 import { WEEKDAYS_SHORT, COLOR_CLASSES } from '../../lib/constants'
 
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]
@@ -14,9 +14,7 @@ export default function WeekView({ lessons, onEdit }: { lessons: Lesson[]; onEdi
         const date = new Date(monday)
         date.setDate(monday.getDate() + i)
         const isToday = toISODate(date) === toISODate(today)
-        const dayLessons = lessons
-          .filter((l) => (l.type === 'once' ? l.date === toISODate(date) : l.weekday === weekday))
-          .sort((a, b) => a.startTime.localeCompare(b.startTime))
+        const dayLessons = lessons.filter((l) => isLessonOnDate(l, date)).sort((a, b) => a.startTime.localeCompare(b.startTime))
         return (
           <div
             key={weekday}

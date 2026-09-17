@@ -1,12 +1,10 @@
 import type { Lesson } from '../../types'
-import { isLessonNow, toISODate } from '../../lib/date'
+import { isLessonNow, isLessonOnDate, toISODate } from '../../lib/date'
 import LessonCard from './LessonCard'
 
 export default function DayView({ lessons, date, onEdit }: { lessons: Lesson[]; date: Date; onEdit: (l: Lesson) => void }) {
   const today = new Date()
-  const dayLessons = lessons
-    .filter((l) => (l.type === 'once' ? l.date === toISODate(date) : l.weekday === date.getDay()))
-    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+  const dayLessons = lessons.filter((l) => isLessonOnDate(l, date)).sort((a, b) => a.startTime.localeCompare(b.startTime))
   return (
     <div className="space-y-3">
       <p className="text-sm font-medium capitalize text-gray-500 dark:text-gray-400">

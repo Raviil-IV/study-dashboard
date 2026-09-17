@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import DashboardPage from './DashboardPage'
 import { useStore } from '../store/useStore'
+import { toISODate } from '../lib/date'
 
 function iso(daysFromNow: number): string {
   const d = new Date()
@@ -44,5 +45,26 @@ describe('DashboardPage', () => {
       </MemoryRouter>,
     )
     expect(screen.getByText(/Сегодня .+,/)).toBeInTheDocument()
+  })
+
+  it('shows only lessons of the current date in the schedule card', () => {
+    const now = new Date()
+    useStore.setState({
+      lessons: [
+        { id: 't1', type: 'once', weekday: now.getDay(), startTime: '09:00', endTime: '10:30', date: toISODate(now), title: 'Сегодняшняя пара' },
+        { id: 't2', type: 'once', weekday: now.getDay(), startTime: '09:00', endTime: '10:30', date: iso(7), title: 'Пара через неделю' },
+        { id: 't3', type: 'weekly', weekday: now.getDay(), startTime: '11:00', endTime: '12:30', title: 'Регулярная пара' },
+      ],
+    })
+
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Сегодняшняя пара')).toBeInTheDocument()
+    expect(screen.getByText('Регулярная пара')).toBeInTheDocument()
+    expect(screen.queryByText('Пара через неделю')).not.toBeInTheDocument()
   })
 })

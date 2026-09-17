@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Lesson } from '../../types'
-import { getMonthGrid, toISODate } from '../../lib/date'
+import { getMonthGrid, isLessonOnDate, toISODate } from '../../lib/date'
 import { WEEKDAYS_SHORT, COLOR_CLASSES } from '../../lib/constants'
 import IconButton from '../ui/IconButton'
 import Button from '../ui/Button'
@@ -40,9 +40,7 @@ export default function MonthView({ lessons, onEdit }: { lessons: Lesson[]; onEd
           </div>
         ))}
         {grid.map((day) => {
-          const dayLessons = lessons
-            .filter((l) => (l.type === 'once' ? l.date === day.iso : l.weekday === day.date.getDay()))
-            .sort((a, b) => a.startTime.localeCompare(b.startTime))
+          const dayLessons = lessons.filter((l) => isLessonOnDate(l, day.date)).sort((a, b) => a.startTime.localeCompare(b.startTime))
           const visible = dayLessons.slice(0, MAX_LESSONS)
           const extra = dayLessons.length - visible.length
           const isToday = day.iso === toISODate(today)
