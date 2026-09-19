@@ -96,7 +96,7 @@ describe('MemoryPage', () => {
       fireEvent.click(screen.getByTestId(`memory-card-${b}`))
     }
     await act(async () => {})
-    expect(screen.getByText('Победа! 🎉')).toBeInTheDocument()
+    expect(screen.getByText('Победа!')).toBeInTheDocument()
     expect(screen.getByText('Результат: 8 ходов за 0 с')).toBeInTheDocument()
     expect(useStore.getState().gameRecords.memory.easy).toBe(8)
   })

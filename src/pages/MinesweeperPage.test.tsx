@@ -52,7 +52,7 @@ describe('MinesweeperPage', () => {
         <MinesweeperPage />
       </MemoryRouter>,
     )
-    fireEvent.click(screen.getByRole('button', { name: '🚩 Флаг' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Флаг' }))
     fireEvent.click(screen.getByTestId('mine-cell-0'))
     expect(screen.getByTestId('mine-cell-0')).toHaveAttribute('data-state', 'flagged')
     fireEvent.click(screen.getByTestId('mine-cell-0'))
@@ -69,7 +69,7 @@ describe('MinesweeperPage', () => {
     fireEvent.click(screen.getByTestId('mine-cell-40'))
     await act(async () => {})
     expect(screen.getByTestId('mine-cell-40')).toHaveAttribute('data-state', 'revealed')
-    expect(screen.getByText('Победа! 🎉')).toBeInTheDocument()
+    expect(screen.getByText('Победа!')).toBeInTheDocument()
     expect(useStore.getState().gameRecords.minesweeper.easy).toBe(0)
   })
 
@@ -81,9 +81,9 @@ describe('MinesweeperPage', () => {
     )
     fireEvent.click(screen.getByTestId('mine-cell-40')) // flood → win
     await act(async () => {})
-    expect(screen.getByText('Победа! 🎉')).toBeInTheDocument()
+    expect(screen.getByText('Победа!')).toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Закрыть' })[0])
-    expect(screen.queryByText('Победа! 🎉')).not.toBeInTheDocument()
+    expect(screen.queryByText('Победа!')).not.toBeInTheDocument()
   })
 
   it('switches difficulty and resets the field', () => {

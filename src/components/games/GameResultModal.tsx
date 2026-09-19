@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+import Icon from '../ui/Icon'
 import Modal from '../ui/Modal'
 import Button from '../ui/Button'
 
@@ -10,7 +12,7 @@ export default function GameResultModal({
   onRestart,
 }: {
   open: boolean
-  title: string
+  title: ReactNode
   message: string
   isRecord: boolean
   onClose: () => void
@@ -19,8 +21,9 @@ export default function GameResultModal({
   return (
     <Modal open={open} title={title} onClose={onClose}>
       {isRecord && (
-        <p className="mb-3 inline-block rounded-lg bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-          🏆 Новый рекорд!
+        <p className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+          <Icon name="trophy" size={14} />
+          Новый рекорд!
         </p>
       )}
       <p className="text-gray-700 dark:text-gray-300">{message}</p>

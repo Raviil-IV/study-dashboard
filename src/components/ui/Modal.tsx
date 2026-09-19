@@ -17,7 +17,7 @@ export default function Modal({
   children,
 }: {
   open: boolean
-  title: string
+  title: ReactNode
   onClose: () => void
   size?: ModalSize
   children: ReactNode

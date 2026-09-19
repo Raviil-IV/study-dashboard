@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import PageHeader from '../components/ui/PageHeader'
 import Button from '../components/ui/Button'
+import Icon from '../components/ui/Icon'
 import DifficultyPicker from '../components/games/DifficultyPicker'
 import GameResultModal from '../components/games/GameResultModal'
 import MinesweeperField from '../components/games/minesweeper/MinesweeperField'
@@ -87,7 +88,15 @@ export default function MinesweeperPage() {
           aria-pressed={mode === 'flag'}
           onClick={() => setMode((m) => (m === 'open' ? 'flag' : 'open'))}
         >
-          {mode === 'open' ? '🚩 Флаг' : '🔍 Открыть'}
+          {mode === 'open' ? (
+            <>
+              <Icon name="flag" /> Флаг
+            </>
+          ) : (
+            <>
+              <Icon name="search" /> Открыть
+            </>
+          )}
         </Button>
       </div>
       <MinesweeperField
@@ -97,7 +106,17 @@ export default function MinesweeperPage() {
       />
       <GameResultModal
         open={result !== null}
-        title={result?.won ? 'Победа! 🎉' : 'Проигрыш 💥'}
+        title={
+          result?.won ? (
+            <>
+              Победа! <Icon name="party" className="inline text-amber-500 dark:text-amber-400" />
+            </>
+          ) : (
+            <>
+              Проигрыш <Icon name="bomb" className="inline text-red-500 dark:text-red-400" />
+            </>
+          )
+        }
         message={result?.won ? `Время: ${result.seconds} с` : 'Попробуй ещё раз'}
         isRecord={result?.isRecord ?? false}
         onClose={() => setResult(null)}

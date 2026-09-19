@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { NAV_ITEMS } from '../../lib/constants'
 import { useAuth } from '../../store/useAuth'
+import Icon from '../ui/Icon'
 import ThemeToggle from './ThemeToggle'
 
 export default function Sidebar() {
@@ -29,7 +30,7 @@ export default function Sidebar() {
               }`
             }
           >
-            <span className="text-base">{item.icon}</span>
+            <Icon name={item.icon} className="dark:text-indigo-400" />
             {item.label}
           </NavLink>
         ))}
@@ -45,7 +46,7 @@ export default function Sidebar() {
             }`
           }
         >
-          <span className="text-base">🛡️</span>
+          <Icon name="shield" className="dark:text-indigo-400" />
           Админка
         </NavLink>
       )}
@@ -59,7 +60,7 @@ export default function Sidebar() {
           }`
         }
       >
-        <span className="text-base">⚙️</span>
+        <Icon name="settings" className="dark:text-indigo-400" />
         Настройки
       </NavLink>
       <div className="mt-auto flex flex-col gap-1 border-t border-gray-200 pt-3 dark:border-gray-800">

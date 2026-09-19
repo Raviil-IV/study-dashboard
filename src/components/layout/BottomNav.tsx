@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { NAV_ITEMS } from '../../lib/constants'
 import { useAuth } from '../../store/useAuth'
+import Icon from '../ui/Icon'
 
 export default function BottomNav() {
   const user = useAuth((s) => s.user)
@@ -17,7 +18,7 @@ export default function BottomNav() {
             }`
           }
         >
-          <span className="text-lg leading-none">{item.icon}</span>
+          <Icon name={item.icon} size={18} className="dark:text-indigo-400" />
           {item.label}
         </NavLink>
       ))}
@@ -30,7 +31,7 @@ export default function BottomNav() {
             }`
           }
         >
-          <span className="text-lg leading-none">🛡️</span>
+          <Icon name="shield" size={18} className="dark:text-indigo-400" />
           Админка
         </NavLink>
       )}

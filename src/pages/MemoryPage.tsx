@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import PageHeader from '../components/ui/PageHeader'
 import Button from '../components/ui/Button'
+import Icon from '../components/ui/Icon'
 import DifficultyPicker from '../components/games/DifficultyPicker'
 import GameResultModal from '../components/games/GameResultModal'
 import MemoryBoard from '../components/games/memory/MemoryBoard'
@@ -89,7 +90,11 @@ export default function MemoryPage() {
       <MemoryBoard cards={game.cards} showPair={showPair} cols={MEMORY_LEVELS[difficulty].cols} onCardClick={handleCardClick} />
       <GameResultModal
         open={result !== null}
-        title="Победа! 🎉"
+        title={
+          <>
+            Победа! <Icon name="party" className="inline text-amber-500 dark:text-amber-400" />
+          </>
+        }
         message={result ? `Результат: ${result.moves} ходов за ${result.seconds} с` : ''}
         isRecord={result?.isRecord ?? false}
         onClose={() => setResult(null)}

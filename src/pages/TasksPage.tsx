@@ -74,7 +74,7 @@ export default function TasksPage() {
       </ul>
       {filtered.length === 0 && (
         <div className="mt-4">
-          <EmptyState icon="🗒️" title="Пока нет задач" hint="Добавь первую задачу, чтобы начать учиться" />
+          <EmptyState icon="clipboard" title="Пока нет задач" hint="Добавь первую задачу, чтобы начать учиться" />
         </div>
       )}
       <Modal open={modalOpen} title={editing ? 'Редактировать задачу' : 'Новая задача'} onClose={() => setModalOpen(false)}>

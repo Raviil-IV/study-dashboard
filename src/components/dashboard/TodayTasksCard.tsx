@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Task } from '../../types'
+import Icon from '../ui/Icon'
 import Card from '../ui/Card'
 import Badge from '../ui/Badge'
 
@@ -8,7 +9,10 @@ export default function TodayTasksCard({ tasks }: { tasks: Task[] }) {
   return (
     <Card title="Задачи на сегодня" action={<Link to="/tasks" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">Все задачи →</Link>}>
       {active.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-gray-500">На сегодня всё свободно 🎉</p>
+        <p className="flex items-center gap-1.5 text-sm text-gray-400 dark:text-gray-500">
+          <Icon name="party" className="text-indigo-500 dark:text-indigo-400" />
+          На сегодня всё свободно
+        </p>
       ) : (
         <ul className="space-y-2">
           {active.map((t) => (

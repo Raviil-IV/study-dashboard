@@ -75,7 +75,7 @@ describe('SnakePage', () => {
       vi.advanceTimersByTime(150 * 8)
     })
     await act(async () => {})
-    expect(screen.getByText('Игра окончена 💀')).toBeInTheDocument()
+    expect(screen.getByText('Игра окончена')).toBeInTheDocument()
     expect(useStore.getState().gameRecords.snake.easy).toBe(0)
   })
 
@@ -108,9 +108,9 @@ describe('SnakePage', () => {
       vi.advanceTimersByTime(150 * 8) // wall collision
     })
     await act(async () => {})
-    expect(screen.getByText('Игра окончена 💀')).toBeInTheDocument()
+    expect(screen.getByText('Игра окончена')).toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Закрыть' })[0])
-    expect(screen.queryByText('Игра окончена 💀')).not.toBeInTheDocument()
+    expect(screen.queryByText('Игра окончена')).not.toBeInTheDocument()
   })
 
   it('restarts the game after game over', async () => {
@@ -124,9 +124,9 @@ describe('SnakePage', () => {
       vi.advanceTimersByTime(150 * 8) // wall collision on the 8th step
     })
     await act(async () => {})
-    expect(screen.getByText('Игра окончена 💀')).toBeInTheDocument()
+    expect(screen.getByText('Игра окончена')).toBeInTheDocument()
     fireEvent.click(screen.getAllByRole('button', { name: 'Заново' })[0])
-    expect(screen.queryByText('Игра окончена 💀')).not.toBeInTheDocument()
+    expect(screen.queryByText('Игра окончена')).not.toBeInTheDocument()
     expect(screen.getByTestId('snake-cell-7-7')).toBeInTheDocument()
   })
 })

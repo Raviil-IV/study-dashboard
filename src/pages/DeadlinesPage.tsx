@@ -65,7 +65,7 @@ export default function DeadlinesPage() {
       </ul>
       {visible.length === 0 && (
         <div className="mt-4">
-          <EmptyState icon="⏰" title={tab === 'upcoming' ? 'Нет ближайших дедлайнов' : 'Прошедших дедлайнов нет'} hint="Добавь важную дату, чтобы не забыть о ней" />
+          <EmptyState icon="alert" title={tab === 'upcoming' ? 'Нет ближайших дедлайнов' : 'Прошедших дедлайнов нет'} hint="Добавь важную дату, чтобы не забыть о ней" />
         </div>
       )}
       <Modal open={modalOpen} title={editing ? 'Редактировать дедлайн' : 'Новый дедлайн'} onClose={() => setModalOpen(false)}>

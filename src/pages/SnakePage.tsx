@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import PageHeader from '../components/ui/PageHeader'
 import Button from '../components/ui/Button'
+import Icon from '../components/ui/Icon'
 import DifficultyPicker from '../components/games/DifficultyPicker'
 import GameResultModal from '../components/games/GameResultModal'
 import SnakeBoard from '../components/games/snake/SnakeBoard'
@@ -117,7 +118,17 @@ export default function SnakePage() {
       <SnakeBoard game={game} onSwipe={steer} />
       <GameResultModal
         open={result !== null}
-        title={won ? 'Победа! 🎉' : 'Игра окончена 💀'}
+        title={
+          won ? (
+            <>
+              Победа! <Icon name="party" className="inline text-amber-500 dark:text-amber-400" />
+            </>
+          ) : (
+            <>
+              Игра окончена <Icon name="skull" className="inline text-gray-400 dark:text-gray-500" />
+            </>
+          )
+        }
         message={result ? `Счёт: ${result.score} · Время: ${result.seconds} с` : ''}
         isRecord={result?.isRecord ?? false}
         onClose={() => setResult(null)}

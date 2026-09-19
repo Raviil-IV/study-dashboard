@@ -1,4 +1,5 @@
 import type { Settings } from '../types'
+import type { IconName } from '../components/ui/Icon'
 
 export const WEEKDAYS = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']
 
@@ -28,14 +29,14 @@ export const COLOR_NAMES: Record<string, string> = {
   gray: 'Серый',
 }
 
-export const NAV_ITEMS = [
-  { to: '/', label: 'Главная', icon: '🏠' },
-  { to: '/schedule', label: 'Расписание', icon: '📅' },
-  { to: '/tasks', label: 'Задачи', icon: '✅' },
-  { to: '/deadlines', label: 'Дедлайны', icon: '⏰' },
-  { to: '/notes', label: 'Заметки', icon: '📝' },
-  { to: '/focus', label: 'Фокус', icon: '⏱️' },
-  { to: '/games', label: 'Игры', icon: '🎮' },
+export const NAV_ITEMS: { to: string; label: string; icon: IconName }[] = [
+  { to: '/', label: 'Главная', icon: 'home' },
+  { to: '/schedule', label: 'Расписание', icon: 'calendar' },
+  { to: '/tasks', label: 'Задачи', icon: 'list-todo' },
+  { to: '/deadlines', label: 'Дедлайны', icon: 'alert' },
+  { to: '/notes', label: 'Заметки', icon: 'note' },
+  { to: '/focus', label: 'Фокус', icon: 'timer' },
+  { to: '/games', label: 'Игры', icon: 'games' },
 ]
 
 export const STORAGE_KEYS = {

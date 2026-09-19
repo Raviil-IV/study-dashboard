@@ -1,0 +1,71 @@
+import type { LucideIcon } from 'lucide-react'
+import {
+  AlarmClock,
+  Bomb,
+  Brain,
+  Calendar,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Flag,
+  Gamepad2,
+  Home,
+  ListTodo,
+  Monitor,
+  Moon,
+  PartyPopper,
+  Pencil,
+  Pin,
+  Plus,
+  Search,
+  Settings,
+  Shield,
+  Skull,
+  StickyNote,
+  Sun,
+  Timer,
+  Trash2,
+  Trophy,
+  Waypoints,
+  X,
+} from 'lucide-react'
+
+const icons = {
+  home: Home,
+  calendar: Calendar,
+  'list-todo': ListTodo,
+  alert: AlarmClock,
+  note: StickyNote,
+  timer: Timer,
+  games: Gamepad2,
+  edit: Pencil,
+  trash: Trash2,
+  pin: Pin,
+  close: X,
+  plus: Plus,
+  'chevron-left': ChevronLeft,
+  'chevron-right': ChevronRight,
+  check: Check,
+  settings: Settings,
+  sun: Sun,
+  moon: Moon,
+  system: Monitor,
+  shield: Shield,
+  clipboard: ClipboardList,
+  brain: Brain,
+  waypoints: Waypoints,
+  bomb: Bomb,
+  flag: Flag,
+  search: Search,
+  party: PartyPopper,
+  trophy: Trophy,
+  skull: Skull,
+} satisfies Record<string, LucideIcon>
+
+export type IconName = keyof typeof icons
+
+export default function Icon({ name, size = 16, className }: { name: IconName; size?: number; className?: string }) {
+  const Cmp = icons[name]
+  return <Cmp size={size} className={className} aria-hidden="true" />
+}
