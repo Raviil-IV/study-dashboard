@@ -6,7 +6,13 @@ import { useStore } from '../store/useStore'
 import { usePomodoroStore } from '../store/usePomodoroStore'
 
 vi.mock('../lib/api', () => ({
-  api: { get: vi.fn(), post: vi.fn(), patch: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  api: {
+    get: vi.fn().mockResolvedValue(undefined),
+    post: vi.fn().mockResolvedValue(undefined),
+    patch: vi.fn().mockResolvedValue(undefined),
+    put: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
+  },
 }))
 
 function renderPage() {
@@ -56,5 +62,25 @@ describe('FocusPage', () => {
     renderPage()
     fireEvent.change(screen.getByLabelText('Предмет'), { target: { value: 'Математика' } })
     expect(usePomodoroStore.getState().subject).toBe('Математика')
+  })
+
+  it('shows the duration input for the active mode', () => {
+    renderPage()
+    const input = screen.getByLabelText('Работа (минут)') as HTMLInputElement
+    expect(input.value).toBe('25')
+  })
+
+  it('switches the duration input when the mode tab changes', () => {
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Короткий перерыв' }))
+    const input = screen.getByLabelText('Короткий перерыв (минут)') as HTMLInputElement
+    expect(input.value).toBe('5')
+  })
+
+  it('updates the global work duration from the focus page', () => {
+    renderPage()
+    const input = screen.getByLabelText('Работа (минут)') as HTMLInputElement
+    fireEvent.change(input, { target: { value: '50' } })
+    expect(useStore.getState().settings.pomodoroWorkMinutes).toBe(50)
   })
 })
