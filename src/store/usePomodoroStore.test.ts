@@ -2,11 +2,16 @@ import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { usePomodoroStore } from './usePomodoroStore'
 import { useStore } from './useStore'
 
-const { postMock } = vi.hoisted(() => ({ postMock: vi.fn() }))
+const { postMock, playBeepMock, primeAudioMock } = vi.hoisted(() => ({
+  postMock: vi.fn(),
+  playBeepMock: vi.fn(),
+  primeAudioMock: vi.fn(),
+}))
 
 vi.mock('../lib/api', () => ({
   api: { get: vi.fn(), post: postMock, patch: vi.fn(), put: vi.fn(), delete: vi.fn() },
 }))
+vi.mock('../lib/sound', () => ({ playBeep: playBeepMock, primeAudio: primeAudioMock }))
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -99,5 +104,36 @@ describe('usePomodoroStore', () => {
     })
     usePomodoroStore.getState().syncDurations()
     expect(usePomodoroStore.getState().secondsLeft).toBe(30 * 60)
+  })
+
+  it('beeps when a work session completes', () => {
+    const s = usePomodoroStore.getState()
+    s.start()
+    for (let i = 0; i < 25 * 60; i++) {
+      usePomodoroStore.getState().tick()
+    }
+    expect(playBeepMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('beeps when a break completes', () => {
+    const s = usePomodoroStore.getState()
+    s.setMode('shortBreak')
+    s.start()
+    for (let i = 0; i < 5 * 60; i++) {
+      usePomodoroStore.getState().tick()
+    }
+    expect(playBeepMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not beep on an ordinary tick', () => {
+    const s = usePomodoroStore.getState()
+    s.start()
+    usePomodoroStore.getState().tick()
+    expect(playBeepMock).not.toHaveBeenCalled()
+  })
+
+  it('primes the audio context when starting', () => {
+    usePomodoroStore.getState().start()
+    expect(primeAudioMock).toHaveBeenCalledTimes(1)
   })
 })

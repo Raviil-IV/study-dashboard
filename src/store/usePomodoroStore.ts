@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { useStore } from './useStore'
+import { playBeep, primeAudio } from '../lib/sound'
 
 export type PomodoroMode = 'work' | 'shortBreak' | 'longBreak'
 
@@ -38,7 +39,10 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   setMode: (mode) =>
     set({ mode, secondsLeft: MODE_SECONDS(useStore.getState().settings, mode), isRunning: false }),
   setSubject: (subject) => set({ subject }),
-  start: () => set({ isRunning: true }),
+  start: () => {
+    primeAudio()
+    set({ isRunning: true })
+  },
   pause: () => set({ isRunning: false }),
   reset: () =>
     set({ isRunning: false, secondsLeft: MODE_SECONDS(useStore.getState().settings, get().mode) }),
@@ -61,6 +65,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
         completed: true,
       })
     }
+    playBeep()
     const nextMode: PomodoroMode = wasWork ? 'shortBreak' : 'work'
     set({ mode: nextMode, secondsLeft: MODE_SECONDS(settings, nextMode), isRunning: false })
   },
