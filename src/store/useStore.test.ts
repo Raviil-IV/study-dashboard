@@ -1,6 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { useStore } from './useStore'
-import type { Task } from '../types'
+import type { Deadline, FocusSession, Lesson, Note, Task } from '../types'
 
 const { postMock, patchMock, deleteMock, putMock } = vi.hoisted(() => ({
   postMock: vi.fn(),
@@ -55,9 +55,11 @@ describe('useStore', () => {
   })
 
   it('rolls back an optimistic patch on failure', async () => {
-    postMock.mockResolvedValue({} as Task)
+    postMock.mockImplementation(async (_path: string, task: Task) => task)
     useStore.getState().addTask({ title: 'A', priority: 'low', status: 'todo' })
     const id = useStore.getState().tasks[0].id
+    await Promise.resolve()
+    await Promise.resolve()
     patchMock.mockRejectedValue(new Error('fail'))
     useStore.getState().updateTask(id, { title: 'B' })
     expect(useStore.getState().tasks[0].title).toBe('B')
@@ -152,5 +154,117 @@ describe('useStore', () => {
     expect(useStore.getState().lessons).toHaveLength(0)
 
     await vi.waitFor(() => expect(useStore.getState().lessons).toHaveLength(1))
+  })
+
+  it('adopts the server id for an optimistically added lesson', async () => {
+    const created: Lesson = {
+      id: '0f5c9c1e-6a3b-4b0a-8c7d-2f9e1a4b6c8d',
+      title: 'Матанализ',
+      type: 'weekly',
+      weekday: 1,
+      startTime: '09:00',
+      endTime: '10:30',
+    }
+    postMock.mockResolvedValue(created)
+
+    useStore.getState().addLesson({ title: 'Матанализ', type: 'weekly', weekday: 1, startTime: '09:00', endTime: '10:30' })
+    const tempId = useStore.getState().lessons[0].id
+    expect(tempId).not.toBe(created.id)
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(useStore.getState().lessons).toHaveLength(1)
+    expect(useStore.getState().lessons[0].id).toBe(created.id)
+    expect(useStore.getState().lessons.some((l) => l.id === tempId)).toBe(false)
+  })
+
+  it('adopts the server id for an optimistically added task', async () => {
+    const created: Task = {
+      id: '1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d',
+      title: 'Решить 5 задач',
+      priority: 'medium',
+      status: 'todo',
+      createdAt: '2026-09-29T09:00:00.000Z',
+    }
+    postMock.mockResolvedValue(created)
+
+    useStore.getState().addTask({ title: 'Решить 5 задач', priority: 'medium', status: 'todo' })
+    const tempId = useStore.getState().tasks[0].id
+    expect(tempId).not.toBe(created.id)
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(useStore.getState().tasks).toHaveLength(1)
+    expect(useStore.getState().tasks[0].id).toBe(created.id)
+    expect(useStore.getState().tasks.some((t) => t.id === tempId)).toBe(false)
+  })
+
+  it('adopts the server id for an optimistically added deadline', async () => {
+    const created: Deadline = {
+      id: '2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e',
+      title: 'Экзамен по матанализу',
+      type: 'exam',
+      date: '2026-12-20',
+      createdAt: '2026-09-29T09:00:00.000Z',
+    }
+    postMock.mockResolvedValue(created)
+
+    useStore.getState().addDeadline({ title: 'Экзамен по матанализу', type: 'exam', date: '2026-12-20' })
+    const tempId = useStore.getState().deadlines[0].id
+    expect(tempId).not.toBe(created.id)
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(useStore.getState().deadlines).toHaveLength(1)
+    expect(useStore.getState().deadlines[0].id).toBe(created.id)
+    expect(useStore.getState().deadlines.some((d) => d.id === tempId)).toBe(false)
+  })
+
+  it('adopts the server id for an optimistically added note', async () => {
+    const created: Note = {
+      id: '3c4d5e6f-7a8b-4c9d-8e1f-2a3b4c5d6e7f',
+      title: 'Конспект',
+      content: 'Производные',
+      tags: ['матан'],
+      pinned: false,
+      createdAt: '2026-09-29T09:00:00.000Z',
+      updatedAt: '2026-09-29T09:00:00.000Z',
+    }
+    postMock.mockResolvedValue(created)
+
+    useStore.getState().addNote({ title: 'Конспект', content: 'Производные', tags: ['матан'], pinned: false })
+    const tempId = useStore.getState().notes[0].id
+    expect(tempId).not.toBe(created.id)
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(useStore.getState().notes).toHaveLength(1)
+    expect(useStore.getState().notes[0].id).toBe(created.id)
+    expect(useStore.getState().notes.some((n) => n.id === tempId)).toBe(false)
+  })
+
+  it('adopts the server id for an optimistically added focus session', async () => {
+    const created: FocusSession = {
+      id: '4d5e6f7a-8b9c-4d0e-9f1a-2b3c4d5e6f7a',
+      startedAt: '2026-09-29T09:00:00.000Z',
+      durationMinutes: 25,
+      completed: true,
+    }
+    postMock.mockResolvedValue(created)
+
+    useStore.getState().addFocusSession({ durationMinutes: 25, completed: true })
+    const tempId = useStore.getState().focusSessions[0].id
+    expect(tempId).not.toBe(created.id)
+
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(useStore.getState().focusSessions).toHaveLength(1)
+    expect(useStore.getState().focusSessions[0].id).toBe(created.id)
+    expect(useStore.getState().focusSessions.some((f) => f.id === tempId)).toBe(false)
   })
 })

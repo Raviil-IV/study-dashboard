@@ -66,10 +66,15 @@ export const useStore = create<StoreState>((set, get) => ({
     const lesson = { ...input, id: uid() }
     set((s) => ({ lessons: [...s.lessons, lesson] }))
     log.info('lesson added locally', { lessonId: lesson.id })
-    void api.post<Lesson>('/lessons', lesson).catch((err) => {
-      set((s) => ({ lessons: s.lessons.filter((l) => l.id !== lesson.id) }))
-      notifyError(err)
-    })
+    void api.post<Lesson>('/lessons', lesson)
+      .then((created) => {
+        if (!created?.id) return
+        set((s) => ({ lessons: s.lessons.map((l) => (l.id === lesson.id ? created : l)) }))
+      })
+      .catch((err) => {
+        set((s) => ({ lessons: s.lessons.filter((l) => l.id !== lesson.id) }))
+        notifyError(err)
+      })
   },
   updateLesson: (id, patch) => {
     const prev = get().lessons.find((l) => l.id === id)
@@ -113,10 +118,15 @@ export const useStore = create<StoreState>((set, get) => ({
     const task: Task = { ...input, id: uid(), createdAt: new Date().toISOString() }
     set((s) => ({ tasks: [...s.tasks, task] }))
     log.info('task added locally', { taskId: task.id })
-    void api.post<Task>('/tasks', task).catch((err) => {
-      set((s) => ({ tasks: s.tasks.filter((t) => t.id !== task.id) }))
-      notifyError(err)
-    })
+    void api.post<Task>('/tasks', task)
+      .then((created) => {
+        if (!created?.id) return
+        set((s) => ({ tasks: s.tasks.map((t) => (t.id === task.id ? created : t)) }))
+      })
+      .catch((err) => {
+        set((s) => ({ tasks: s.tasks.filter((t) => t.id !== task.id) }))
+        notifyError(err)
+      })
   },
   updateTask: (id, patch) => {
     const prev = get().tasks.find((t) => t.id === id)
@@ -156,10 +166,15 @@ export const useStore = create<StoreState>((set, get) => ({
     const deadline: Deadline = { ...input, id: uid(), createdAt: new Date().toISOString() }
     set((s) => ({ deadlines: [...s.deadlines, deadline] }))
     log.info('deadline added locally', { deadlineId: deadline.id })
-    void api.post<Deadline>('/deadlines', deadline).catch((err) => {
-      set((s) => ({ deadlines: s.deadlines.filter((d) => d.id !== deadline.id) }))
-      notifyError(err)
-    })
+    void api.post<Deadline>('/deadlines', deadline)
+      .then((created) => {
+        if (!created?.id) return
+        set((s) => ({ deadlines: s.deadlines.map((d) => (d.id === deadline.id ? created : d)) }))
+      })
+      .catch((err) => {
+        set((s) => ({ deadlines: s.deadlines.filter((d) => d.id !== deadline.id) }))
+        notifyError(err)
+      })
   },
   updateDeadline: (id, patch) => {
     const prev = get().deadlines.find((d) => d.id === id)
@@ -187,10 +202,15 @@ export const useStore = create<StoreState>((set, get) => ({
     const note: Note = { ...input, id: uid(), createdAt: now, updatedAt: now }
     set((s) => ({ notes: [...s.notes, note] }))
     log.info('note added locally', { noteId: note.id })
-    void api.post<Note>('/notes', note).catch((err) => {
-      set((s) => ({ notes: s.notes.filter((n) => n.id !== note.id) }))
-      notifyError(err)
-    })
+    void api.post<Note>('/notes', note)
+      .then((created) => {
+        if (!created?.id) return
+        set((s) => ({ notes: s.notes.map((n) => (n.id === note.id ? created : n)) }))
+      })
+      .catch((err) => {
+        set((s) => ({ notes: s.notes.filter((n) => n.id !== note.id) }))
+        notifyError(err)
+      })
   },
   updateNote: (id, patch) => {
     const prev = get().notes.find((n) => n.id === id)
@@ -229,10 +249,15 @@ export const useStore = create<StoreState>((set, get) => ({
     const session: FocusSession = { ...input, id: uid(), startedAt: new Date().toISOString() }
     set((s) => ({ focusSessions: [...s.focusSessions, session] }))
     log.info('focus session added locally', { sessionId: session.id })
-    void api.post<FocusSession>('/focus-sessions', session).catch((err) => {
-      set((s) => ({ focusSessions: s.focusSessions.filter((f) => f.id !== session.id) }))
-      notifyError(err)
-    })
+    void api.post<FocusSession>('/focus-sessions', session)
+      .then((created) => {
+        if (!created?.id) return
+        set((s) => ({ focusSessions: s.focusSessions.map((f) => (f.id === session.id ? created : f)) }))
+      })
+      .catch((err) => {
+        set((s) => ({ focusSessions: s.focusSessions.filter((f) => f.id !== session.id) }))
+        notifyError(err)
+      })
   },
 
   updateSettings: (patch) => {
