@@ -44,7 +44,7 @@ export const taskSchema = z.object({
   title: z.string().trim().min(1, 'Укажите название задачи'),
   subject: z.string().trim().max(200).optional(),
   description: z.string().trim().max(5000).optional(),
-  dueDate: isoDate.optional(),
+  dueDate: isoDate.nullable().optional(),
   priority: z.enum(['low', 'medium', 'high']),
   status: z.enum(['todo', 'in-progress', 'done']),
   createdAt: z.string(),
@@ -57,7 +57,7 @@ export const deadlineSchema = z.object({
   type: z.enum(['exam', 'test', 'project', 'homework', 'other']),
   subject: z.string().trim().max(200).optional(),
   date: isoDate,
-  time: hhmm.optional(),
+  time: hhmm.nullable().optional(),
   note: z.string().trim().max(2000).optional(),
   createdAt: z.string(),
 })

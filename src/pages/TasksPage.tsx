@@ -40,10 +40,11 @@ export default function TasksPage() {
   }, [tasks, filters])
 
   const handleSubmit = (values: TaskFormValues) => {
+    const payload = { ...values, dueDate: values.dueDate || null }
     if (editing) {
-      updateTask(editing.id, values)
+      updateTask(editing.id, payload)
     } else {
-      addTask(values)
+      addTask(payload)
     }
     setModalOpen(false)
   }

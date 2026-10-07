@@ -25,10 +25,11 @@ export default function DeadlinesPage() {
   const visible = tab === 'upcoming' ? upcoming : past
 
   const handleSubmit = (values: DeadlineFormValues) => {
+    const payload = { ...values, time: values.time || null }
     if (editing) {
-      updateDeadline(editing.id, values)
+      updateDeadline(editing.id, payload)
     } else {
-      addDeadline(values)
+      addDeadline(payload)
     }
     setModalOpen(false)
   }

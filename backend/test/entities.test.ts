@@ -82,4 +82,37 @@ describe('entities CRUD', () => {
     expect(res.status).toBe(201)
     expect(res.body.dueDate).toBe('2026-09-01')
   })
+
+  it('creates a task with a null dueDate', async () => {
+    const agent = createAgent()
+    await signUp(agent, 'task-null')
+    const res = await agent.post('/api/tasks').send({
+      id: randomUUID(),
+      title: 'Без срока',
+      priority: 'low',
+      status: 'todo',
+      dueDate: null,
+      createdAt: new Date().toISOString(),
+    })
+    expect(res.status).toBe(201)
+    expect(res.body.dueDate).toBeNull()
+  })
+
+  it('clears a task dueDate with a null patch', async () => {
+    const agent = createAgent()
+    await signUp(agent, 'task-clear')
+    const id = randomUUID()
+    const created = await agent.post('/api/tasks').send({
+      id,
+      title: 'Со сроком',
+      priority: 'medium',
+      status: 'todo',
+      dueDate: '2026-09-01',
+      createdAt: new Date().toISOString(),
+    })
+    expect(created.status).toBe(201)
+    const res = await agent.patch(`/api/tasks/${id}`).send({ dueDate: null })
+    expect(res.status).toBe(200)
+    expect(res.body.dueDate).toBeNull()
+  })
 })

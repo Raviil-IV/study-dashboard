@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import DeadlinesPage from './DeadlinesPage'
 import { useStore } from '../store/useStore'
+import { api } from '../lib/api'
 
 vi.mock('../lib/api', () => ({
   api: {
@@ -32,6 +33,7 @@ function renderPage() {
 }
 
 beforeEach(() => {
+  vi.clearAllMocks()
   localStorage.clear()
   useStore.setState({
     lessons: [],
@@ -70,5 +72,15 @@ describe('DeadlinesPage', () => {
     await user.click(screen.getByRole('button', { name: 'Сохранить' }))
     expect(useStore.getState().deadlines).toHaveLength(3)
     expect(screen.getByText('Проект по информатике')).toBeInTheDocument()
+  })
+
+  it('creates a deadline without time', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Добавить дедлайн' }))
+    await user.type(screen.getByLabelText('Название'), 'Проект без времени')
+    await user.type(screen.getByLabelText('Дата'), iso(5))
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+    expect(vi.mocked(api.post)).toHaveBeenCalledWith('/deadlines', expect.objectContaining({ time: null }))
   })
 })

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import TasksPage from './TasksPage'
 import { useStore } from '../store/useStore'
+import { api } from '../lib/api'
 
 vi.mock('../lib/api', () => ({
   api: {
@@ -32,6 +33,7 @@ function renderPage() {
 }
 
 beforeEach(() => {
+  vi.clearAllMocks()
   localStorage.clear()
   const now = new Date().toISOString()
   useStore.setState({
@@ -77,5 +79,38 @@ describe('TasksPage', () => {
     await user.click(screen.getByRole('button', { name: 'Выполнено' }))
     expect(screen.queryByText('Решить задачи')).not.toBeInTheDocument()
     expect(screen.getByText('Прочитать главу')).toBeInTheDocument()
+  })
+
+  it('creates a task without a due date', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Добавить задачу' }))
+    await user.type(screen.getByLabelText('Название'), 'Без срока')
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+    expect(vi.mocked(api.post)).toHaveBeenCalledWith('/tasks', expect.objectContaining({ dueDate: null }))
+  })
+
+  it('keeps the due date when one is provided', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Добавить задачу' }))
+    await user.type(screen.getByLabelText('Название'), 'Со сроком')
+    await user.type(screen.getByLabelText('Срок (дата)'), '2026-12-01')
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+    expect(vi.mocked(api.post)).toHaveBeenCalledWith('/tasks', expect.objectContaining({ dueDate: '2026-12-01' }))
+  })
+
+  it('clears the due date when editing a task', async () => {
+    const user = userEvent.setup()
+    useStore.setState({
+      tasks: [
+        { id: '1', title: 'Решить задачи', subject: 'Математика', priority: 'high', status: 'todo', createdAt: new Date().toISOString(), dueDate: '2026-12-01' },
+      ],
+    })
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Редактировать' }))
+    await user.clear(screen.getByLabelText('Срок (дата)'))
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+    expect(vi.mocked(api.patch)).toHaveBeenCalledWith('/tasks/1', expect.objectContaining({ dueDate: null }))
   })
 })

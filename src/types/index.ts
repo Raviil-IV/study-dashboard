@@ -17,7 +17,7 @@ export interface Task {
   title: string
   subject?: string
   description?: string
-  dueDate?: string // YYYY-MM-DD
+  dueDate?: string | null // YYYY-MM-DD
   priority: 'low' | 'medium' | 'high'
   status: 'todo' | 'in-progress' | 'done'
   createdAt: string // ISO datetime
@@ -30,7 +30,7 @@ export interface Deadline {
   type: 'exam' | 'test' | 'project' | 'homework' | 'other'
   subject?: string
   date: string // YYYY-MM-DD
-  time?: string // HH:MM
+  time?: string | null // HH:MM
   note?: string
   createdAt: string
 }
