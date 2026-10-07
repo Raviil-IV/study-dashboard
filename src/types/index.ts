@@ -21,7 +21,7 @@ export interface Task {
   priority: 'low' | 'medium' | 'high'
   status: 'todo' | 'in-progress' | 'done'
   createdAt: string // ISO datetime
-  completedAt?: string
+  completedAt?: string | null
 }
 
 export interface Deadline {

@@ -130,10 +130,14 @@ export const useStore = create<StoreState>((set, get) => ({
   },
   updateTask: (id, patch) => {
     const prev = get().tasks.find((t) => t.id === id)
-    set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }))
+    const statusChanged = prev !== undefined && patch.status !== undefined && patch.status !== prev.status
+    const nextPatch: Partial<Task> = statusChanged
+      ? { ...patch, completedAt: patch.status === 'done' ? new Date().toISOString() : null }
+      : patch
+    set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...nextPatch } : t)) }))
     if (prev) {
       log.info('task updated locally', { taskId: id })
-      void api.patch<Task>(`/tasks/${id}`, patch).catch((err) => {
+      void api.patch<Task>(`/tasks/${id}`, nextPatch).catch((err) => {
         set((s) => ({ tasks: rollback(s.tasks, id, prev) }))
         notifyError(err)
       })
@@ -152,7 +156,7 @@ export const useStore = create<StoreState>((set, get) => ({
     const task = get().tasks.find((t) => t.id === id)
     if (!task) return
     const patch = task.status === 'done'
-      ? { status: 'todo' as const, completedAt: undefined }
+      ? { status: 'todo' as const, completedAt: null }
       : { status: 'done' as const, completedAt: new Date().toISOString() }
     set((s) => ({ tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }))
     log.info('task toggled locally', { taskId: id, newStatus: patch.status })

@@ -25,7 +25,7 @@ app.use(requestLogger)
 
 app.use('/api/auth', authRouter)
 app.use('/api/state', requireAuth, stateRouter)
-app.use('/api/lessons', requireAuth, createEntityRouter(lessons, lessonSchema))
+app.use('/api/lessons', requireAuth, createEntityRouter(lessons, lessonSchema, { crossFieldKeys: ['startTime', 'endTime'] }))
 app.use('/api/tasks', requireAuth, createEntityRouter(tasks, taskSchema))
 app.use('/api/deadlines', requireAuth, createEntityRouter(deadlines, deadlineSchema))
 app.use('/api/notes', requireAuth, createEntityRouter(notes, noteSchema))

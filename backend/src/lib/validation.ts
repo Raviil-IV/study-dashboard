@@ -48,7 +48,7 @@ export const taskSchema = z.object({
   priority: z.enum(['low', 'medium', 'high']),
   status: z.enum(['todo', 'in-progress', 'done']),
   createdAt: z.string(),
-  completedAt: z.string().optional(),
+  completedAt: z.string().nullable().optional(),
 })
 
 export const deadlineSchema = z.object({
