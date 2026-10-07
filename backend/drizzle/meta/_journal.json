@@ -43,6 +43,13 @@
       "when": 1789590003580,
       "tag": "0005_volatile_tiger_shark",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791405555252,
+      "tag": "0006_lucky_dreaming_celestial",
+      "breakpoints": true
     }
   ]
 }

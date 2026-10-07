@@ -1,11 +1,12 @@
 import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
-import { eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { db } from '../db/client'
 import { users, visits } from '../db/schema'
 import { loginSchema, registerSchema } from '../lib/validation'
 import { hashPassword, verifyPassword } from '../lib/password'
-import { clearAuthCookie, setAuthCookie } from '../lib/cookies'
+import { COOKIE_NAME, clearAuthCookie, setAuthCookie } from '../lib/cookies'
+import { verifyToken, type TokenPayload } from '../lib/jwt'
 import { requireAuth } from '../middleware/auth'
 import { logger } from '../lib/logger'
 
@@ -30,7 +31,7 @@ authRouter.post('/register', authLimiter, async (req, res, next) => {
     const passwordHash = await hashPassword(password)
     const [user] = await db.insert(users).values({ login, passwordHash }).returning()
     await db.insert(visits).values({ userId: user.id })
-    setAuthCookie(res, user.id)
+    setAuthCookie(res, user.id, user.tokenVersion)
     log.info({ userId: user.id, login }, 'user registered')
     res.status(201).json({ id: user.id, login: user.login, role: user.role })
   } catch (err) {
@@ -47,7 +48,7 @@ authRouter.post('/login', authLimiter, async (req, res, next) => {
       res.status(401).json({ error: { code: 'INVALID_CREDENTIALS', message: 'Неверный логин или пароль' } })
       return
     }
-    setAuthCookie(res, user.id)
+    setAuthCookie(res, user.id, user.tokenVersion)
     await db.insert(visits).values({ userId: user.id })
     log.info({ userId: user.id, login }, 'user logged in')
     res.json({ id: user.id, login: user.login, role: user.role })
@@ -56,9 +57,29 @@ authRouter.post('/login', authLimiter, async (req, res, next) => {
   }
 })
 
-authRouter.post('/logout', (_req, res) => {
-  clearAuthCookie(res)
-  res.status(204).end()
+function payloadFromToken(token: string): TokenPayload | undefined {
+  try {
+    return verifyToken(token)
+  } catch {
+    return undefined
+  }
+}
+
+authRouter.post('/logout', async (req, res, next) => {
+  try {
+    const token = (req.cookies as Record<string, string> | undefined)?.[COOKIE_NAME] ?? ''
+    const payload = payloadFromToken(token)
+    if (payload) {
+      await db
+        .update(users)
+        .set({ tokenVersion: sql`${users.tokenVersion} + 1` })
+        .where(and(eq(users.id, payload.userId), eq(users.tokenVersion, payload.tv ?? 0)))
+    }
+    clearAuthCookie(res)
+    res.status(204).end()
+  } catch (err) {
+    next(err)
+  }
 })
 
 authRouter.get('/me', requireAuth, async (req, res, next) => {

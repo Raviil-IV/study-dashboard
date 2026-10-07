@@ -1,10 +1,22 @@
 import { describe, expect, it } from 'vitest'
 import request from 'supertest'
+import jwt from 'jsonwebtoken'
 import { eq } from 'drizzle-orm'
 import { app } from '../src/app'
 import { db } from '../src/db/client'
-import { visits } from '../src/db/schema'
+import { users, visits } from '../src/db/schema'
+import { DEV_JWT_SECRET } from '../src/lib/jwt'
 import { createAgent, signUp } from './helpers'
+
+function sessionCookie(res: request.Response): string {
+  const cookie = (res.headers['set-cookie'] ?? []).find((c) => c.startsWith('auth_token='))
+  if (!cookie) throw new Error('auth_token cookie not set')
+  return cookie.split(';')[0]
+}
+
+function legacyToken(userId: string): string {
+  return jwt.sign({ userId }, process.env.JWT_SECRET ?? DEV_JWT_SECRET, { expiresIn: '7d' })
+}
 
 describe('auth', () => {
   it('registers a user and sets an auth cookie', async () => {
@@ -61,6 +73,66 @@ describe('auth', () => {
     await agent.post('/api/auth/logout')
     const res = await agent.get('/api/auth/me')
     expect(res.status).toBe(401)
+  })
+
+  it('revokes previously issued tokens on logout', async () => {
+    const { res } = await signUp(createAgent(), 'revoked')
+    const cookie = sessionCookie(res)
+    const before = await request(app).get('/api/auth/me').set('Cookie', cookie)
+    expect(before.status).toBe(200)
+    const logout = await request(app).post('/api/auth/logout').set('Cookie', cookie)
+    expect(logout.status).toBe(204)
+    const after = await request(app).get('/api/auth/me').set('Cookie', cookie)
+    expect(after.status).toBe(401)
+  })
+
+  it('does not let a stale token revoke a session issued after logout', async () => {
+    const registered = await request(app).post('/api/auth/register').send({ login: 'stalecookie', password: 'password123' })
+    const cookieA = sessionCookie(registered)
+    const login = await request(app).post('/api/auth/login').send({ login: 'stalecookie', password: 'password123' })
+    const cookieB = sessionCookie(login)
+    await request(app).post('/api/auth/logout').set('Cookie', cookieA)
+    const staleB = await request(app).get('/api/auth/me').set('Cookie', cookieB)
+    expect(staleB.status).toBe(401)
+    const relogin = await request(app).post('/api/auth/login').send({ login: 'stalecookie', password: 'password123' })
+    const cookieC = sessionCookie(relogin)
+    const beforeStaleLogout = await request(app).get('/api/auth/me').set('Cookie', cookieC)
+    expect(beforeStaleLogout.status).toBe(200)
+    await request(app).post('/api/auth/logout').set('Cookie', cookieA)
+    const me = await request(app).get('/api/auth/me').set('Cookie', cookieC)
+    expect(me.status).toBe(200)
+  })
+
+  it('issues a working session on login after logout', async () => {
+    const agent = createAgent()
+    await signUp(agent, 'relogin')
+    await agent.post('/api/auth/logout')
+    await agent.post('/api/auth/login').send({ login: 'relogin', password: 'password123' })
+    const res = await agent.get('/api/auth/me')
+    expect(res.status).toBe(200)
+  })
+
+  it('rejects a token whose user was deleted with 401', async () => {
+    const { res } = await signUp(createAgent(), 'deleted')
+    const cookie = sessionCookie(res)
+    await db.delete(users).where(eq(users.id, res.body.id))
+    const state = await request(app).get('/api/state').set('Cookie', cookie)
+    expect(state.status).toBe(401)
+  })
+
+  it('accepts a legacy token without a tv claim for a user at tokenVersion 0', async () => {
+    const { res } = await signUp(createAgent(), 'legacy')
+    const me = await request(app).get('/api/auth/me').set('Cookie', `auth_token=${legacyToken(res.body.id)}`)
+    expect(me.status).toBe(200)
+  })
+
+  it('rejects a legacy token after its user logs out', async () => {
+    const { res } = await signUp(createAgent(), 'legacyout')
+    const cookie = `auth_token=${legacyToken(res.body.id)}`
+    const logout = await request(app).post('/api/auth/logout').set('Cookie', cookie)
+    expect(logout.status).toBe(204)
+    const me = await request(app).get('/api/auth/me').set('Cookie', cookie)
+    expect(me.status).toBe(401)
   })
 
   it('returns role in /me response', async () => {
