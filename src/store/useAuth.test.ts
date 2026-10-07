@@ -3,6 +3,7 @@ import { api, ApiError } from '../lib/api'
 import type { Settings } from '../types'
 import { useAuth, handleUnauthorized } from './useAuth'
 import { useStore, type ServerState } from './useStore'
+import { usePomodoroStore } from './usePomodoroStore'
 
 const { hydrateMock, resetLocalMock, loadCachedMock, cacheStateMock, clearCachedMock, showToastMock, initialSlice } = vi.hoisted(() => ({
   hydrateMock: vi.fn(),
@@ -121,6 +122,14 @@ describe('useAuth', () => {
     expect(useAuth.getState().user).toBeNull()
   })
 
+  it('logout() discards a running pomodoro session so it is not recorded for the next user', async () => {
+    useAuth.setState({ user: { id: 'u1', login: 'alice', role: 'user' }, status: 'authed' })
+    usePomodoroStore.setState({ isRunning: true, sessionCount: 2, subject: 'Math', secondsLeft: 100 })
+    mockedPost.mockResolvedValueOnce(undefined)
+    await useAuth.getState().logout()
+    expect(usePomodoroStore.getState()).toMatchObject({ isRunning: false, sessionCount: 0, subject: '' })
+  })
+
   it('handleUnauthorized() ends an authed session, resets local state, clears the cache and shows a toast', () => {
     useAuth.setState({ user: { id: 'u1', login: 'alice', role: 'user' }, status: 'authed' })
     handleUnauthorized()
@@ -129,6 +138,20 @@ describe('useAuth', () => {
     expect(resetLocalMock).toHaveBeenCalled()
     expect(clearCachedMock).toHaveBeenCalled()
     expect(showToastMock).toHaveBeenCalledWith('Сессия истекла, войдите снова')
+  })
+
+  it('handleUnauthorized() discards a running pomodoro session when ending an authed session', () => {
+    useAuth.setState({ user: { id: 'u1', login: 'alice', role: 'user' }, status: 'authed' })
+    usePomodoroStore.setState({ isRunning: true, sessionCount: 2, subject: 'Math', secondsLeft: 100 })
+    handleUnauthorized()
+    expect(usePomodoroStore.getState()).toMatchObject({ isRunning: false, sessionCount: 0, subject: '' })
+  })
+
+  it('handleUnauthorized() leaves a running pomodoro session alone while guest', () => {
+    useAuth.setState({ user: null, status: 'guest' })
+    usePomodoroStore.setState({ isRunning: true, sessionCount: 2, subject: 'Math', secondsLeft: 100 })
+    handleUnauthorized()
+    expect(usePomodoroStore.getState()).toMatchObject({ isRunning: true, sessionCount: 2, subject: 'Math' })
   })
 
   it.each(['loading', 'guest'] as const)('handleUnauthorized() is a no-op while status is %s', (status) => {

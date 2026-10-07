@@ -3,6 +3,7 @@ import { api, ApiError } from '../lib/api'
 import { cacheState, clearCachedState, loadCachedState } from '../lib/cache'
 import { useToast } from '../lib/toast'
 import { useStore, type ServerState } from './useStore'
+import { usePomodoroStore } from './usePomodoroStore'
 import type { Role, User } from '../types'
 
 export type AuthStatus = 'loading' | 'guest' | 'authed' | 'offline'
@@ -65,6 +66,8 @@ export const useAuth = create<AuthState>((set, get) => ({
 
 function endSession(): void {
   useStore.getState().resetLocal()
+  // a session left running would otherwise be recorded under the next user's account
+  usePomodoroStore.getState().resetAll()
   // resetLocal fires the cache subscription below while status is still 'authed', so clear after it
   clearCachedState()
   useAuth.setState({ user: null, status: 'guest' })
