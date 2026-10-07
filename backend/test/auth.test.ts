@@ -11,7 +11,7 @@ describe('auth', () => {
     const res = await request(app).post('/api/auth/register').send({ login: 'alex', password: 'password123' })
     expect(res.status).toBe(201)
     expect(res.body.login).toBe('alex')
-    expect(res.headers['set-cookie']?.join('')).toContain('sd_token')
+    expect(res.headers['set-cookie']?.join('')).toContain('auth_token')
   })
 
   it('rejects a duplicate login with 409', async () => {
