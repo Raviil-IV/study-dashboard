@@ -23,6 +23,18 @@ describe('entities CRUD', () => {
     expect(res.body.userId).toBeTruthy()
   })
 
+  it('returns 409 CONFLICT when a lesson with the same id already exists', async () => {
+    const agent = createAgent()
+    await signUp(agent, 'dup-lesson')
+    const id = randomUUID()
+    const first = await agent.post('/api/lessons').send(lessonPayload(id))
+    expect(first.status).toBe(201)
+    const res = await agent.post('/api/lessons').send(lessonPayload(id))
+    expect(res.status).toBe(409)
+    expect(res.body.error.code).toBe('CONFLICT')
+    expect(res.body.error.message).toBe('Запись с таким идентификатором уже существует')
+  })
+
   it('rejects a lesson with invalid end time (400)', async () => {
     const agent = createAgent()
     await signUp(agent, 'invalid')
