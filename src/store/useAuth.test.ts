@@ -1,12 +1,13 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { api, ApiError } from '../lib/api'
-import { useAuth } from './useAuth'
+import { useAuth, handleUnauthorized } from './useAuth'
 
-const { hydrateMock, resetLocalMock, loadCachedMock, cacheStateMock } = vi.hoisted(() => ({
+const { hydrateMock, resetLocalMock, loadCachedMock, cacheStateMock, showToastMock } = vi.hoisted(() => ({
   hydrateMock: vi.fn(),
   resetLocalMock: vi.fn(),
   loadCachedMock: vi.fn<() => unknown>(() => null),
   cacheStateMock: vi.fn(),
+  showToastMock: vi.fn(),
 }))
 
 vi.mock('../lib/api', async (importOriginal) => {
@@ -18,6 +19,10 @@ vi.mock('../lib/cache', () => ({
   loadCachedState: () => loadCachedMock(),
 }))
 vi.mock('./useStore', () => ({ useStore: { getState: () => ({ hydrate: hydrateMock, resetLocal: resetLocalMock }) } }))
+vi.mock('../lib/toast', () => ({
+  notifyError: vi.fn(),
+  useToast: { getState: () => ({ show: showToastMock }) },
+}))
 
 const mockedGet = vi.mocked(api.get)
 const mockedPost = vi.mocked(api.post)
@@ -74,5 +79,30 @@ describe('useAuth', () => {
     await useAuth.getState().logout()
     expect(useAuth.getState().status).toBe('guest')
     expect(resetLocalMock).toHaveBeenCalled()
+  })
+
+  it('logout() posts /auth/logout and clears the user', async () => {
+    useAuth.setState({ user: { id: 'u1', login: 'alice', role: 'user' }, status: 'authed' })
+    mockedPost.mockResolvedValueOnce(undefined)
+    await useAuth.getState().logout()
+    expect(mockedPost).toHaveBeenCalledWith('/auth/logout', {})
+    expect(useAuth.getState().user).toBeNull()
+  })
+
+  it('handleUnauthorized() ends an authed session, resets local state and shows a toast', () => {
+    useAuth.setState({ user: { id: 'u1', login: 'alice', role: 'user' }, status: 'authed' })
+    handleUnauthorized()
+    expect(useAuth.getState().status).toBe('guest')
+    expect(useAuth.getState().user).toBeNull()
+    expect(resetLocalMock).toHaveBeenCalled()
+    expect(showToastMock).toHaveBeenCalledWith('Сессия истекла, войдите снова')
+  })
+
+  it.each(['loading', 'guest'] as const)('handleUnauthorized() is a no-op while status is %s', (status) => {
+    useAuth.setState({ user: null, status })
+    handleUnauthorized()
+    expect(useAuth.getState().status).toBe(status)
+    expect(resetLocalMock).not.toHaveBeenCalled()
+    expect(showToastMock).not.toHaveBeenCalled()
   })
 })

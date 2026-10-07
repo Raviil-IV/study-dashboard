@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { api, ApiError } from '../lib/api'
 import { cacheState, loadCachedState } from '../lib/cache'
+import { useToast } from '../lib/toast'
 import { useStore, type ServerState } from './useStore'
 import type { Role, User } from '../types'
 
@@ -57,7 +58,17 @@ export const useAuth = create<AuthState>((set, get) => ({
 
   logout: async () => {
     await api.post('/auth/logout', {}).catch(() => {})
-    useStore.getState().resetLocal()
-    set({ user: null, status: 'guest' })
+    endSession()
   },
 }))
+
+function endSession(): void {
+  useStore.getState().resetLocal()
+  useAuth.setState({ user: null, status: 'guest' })
+}
+
+export function handleUnauthorized(): void {
+  if (useAuth.getState().status !== 'authed') return
+  endSession()
+  useToast.getState().show('Сессия истекла, войдите снова')
+}
