@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { api, ApiError } from '../lib/api'
-import { cacheState, loadCachedState } from '../lib/cache'
+import { cacheState, clearCachedState, loadCachedState } from '../lib/cache'
 import { useToast } from '../lib/toast'
 import { useStore, type ServerState } from './useStore'
 import type { Role, User } from '../types'
@@ -30,6 +30,7 @@ export const useAuth = create<AuthState>((set, get) => ({
       set({ user, status: 'authed' })
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
+        clearCachedState()
         set({ user: null, status: 'guest' })
         return
       }
@@ -64,8 +65,23 @@ export const useAuth = create<AuthState>((set, get) => ({
 
 function endSession(): void {
   useStore.getState().resetLocal()
+  // resetLocal fires the cache subscription below while status is still 'authed', so clear after it
+  clearCachedState()
   useAuth.setState({ user: null, status: 'guest' })
 }
+
+useStore.subscribe((state) => {
+  if (useAuth.getState().status !== 'authed') return
+  cacheState({
+    lessons: state.lessons,
+    tasks: state.tasks,
+    deadlines: state.deadlines,
+    notes: state.notes,
+    focusSessions: state.focusSessions,
+    settings: state.settings,
+    gameRecords: state.gameRecords,
+  })
+})
 
 export function handleUnauthorized(): void {
   if (useAuth.getState().status !== 'authed') return

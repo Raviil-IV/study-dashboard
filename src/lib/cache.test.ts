@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cacheState, loadCachedState } from './cache'
+import { cacheState, clearCachedState, loadCachedState } from './cache'
 import type { ServerState } from '../store/useStore'
 
 const sample: ServerState = {
@@ -25,6 +25,13 @@ describe('offline cache', () => {
 
   it('returns null on corrupt JSON', () => {
     localStorage.setItem('study-dashboard:cache', '{corrupt')
+    expect(loadCachedState()).toBeNull()
+  })
+
+  it('clearCachedState removes the snapshot', () => {
+    cacheState(sample)
+    clearCachedState()
+    expect(localStorage.getItem('study-dashboard:cache')).toBeNull()
     expect(loadCachedState()).toBeNull()
   })
 })
