@@ -6,7 +6,7 @@
 
 **Stack:** React 19 + TypeScript + Vite + Vitest (frontend, root `package.json`); Express 4 + Zod + Drizzle + Postgres (backend in `backend/`). Backend tests need the PostgreSQL test container on `127.0.0.1:5432` (`study-test-postgres`, already running).
 
-**Baselines before this batch:** backend `npm test` = 13 files / 101 tests; frontend `npm test` = 42 files / 244 tests; `npx tsc -b` (root) and `npx tsc --noEmit` (backend) exit 0.
+**Baselines before this batch (on `main` @ `24b0848`):** backend `npm test` = 11 files / 84 tests; frontend `npm test` = 42 files / 226 tests; `npx tsc -b` (root) and `npx tsc --noEmit` (backend) exit 0. The batch-1 branch `fix/important-batch` (7 commits, not merged) has larger counts; they do not apply here.
 
 **Task order:** 1 (item 15) → 2 (item 12) → 3 (item 13) → 4 (item 14) → 5 (item 17, CI) → 6 (item 17, e2e smoke).
 
@@ -31,7 +31,7 @@
 1. Compatibility guard, written BEFORE the upgrade. Generate a hash with the currently installed `bcrypt@5` for `password123` (run `node -e` inside `backend/`, do not write the hash into a file by hand). Create `backend/test/password.test.ts` with a test that `verifyPassword('password123', <that hash literal>)` resolves `true`, and that `verifyPassword('wrong-password', <that hash literal>)` resolves `false`. Use `hashPassword`/`verifyPassword` from `backend/src/lib/password.ts`. Run it: it must pass on the current code (this is the guard, not a red test). Commit it as `test: pin bcrypt hash compatibility before upgrade`.
 2. Upgrade in `backend/`: `npm install bcrypt@^6.0.0 express@^4.22.3 drizzle-orm@^0.45.4`. Then check `npm ls tar` shows no `tar` under `bcrypt`. If `bcrypt@6` ships its own types, remove `@types/bcrypt` and keep `tsc` green; otherwise keep it.
 3. Root (frontend): `npm audit fix` (no `--force`).
-4. Verify: `cd backend && npx tsc --noEmit`; `cd backend && npm test` (expect 14 files, 104 tests); root `npx tsc -b`; root `npm test` (expect 42 files, 244 tests); `npm audit --omit=dev` in both directories.
+4. Verify: `cd backend && npx tsc --noEmit`; `cd backend && npm test` (expect 12 files, 86 tests: 11 files / 84 tests on main plus the 2 guard tests in one new file); root `npx tsc -b`; root `npm test` (expect 42 files, 226 tests); `npm audit --omit=dev` in both directories.
 5. If `drizzle-orm@0.45.4` or `express@4.22.3` breaks anything, fix within the upgrade or report BLOCKED with the exact error. Do not fall back to `--force`.
 6. Commit as `chore: upgrade bcrypt, express and drizzle-orm to fix audit findings`. In the report, include the `npm audit --omit=dev` summary before and after for both directories. Any remaining issue must be listed by package name with its severity and whether a non-breaking fix exists.
 
