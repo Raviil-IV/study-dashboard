@@ -5,6 +5,7 @@ import { db } from '../db/client'
 import { lessons, ranepaImports } from '../db/schema'
 import { parseScheduleHtml, type InvalidLesson, type ParsedLesson } from '../lib/ranepa'
 import { fetchSchedulePage, isValidRanepaUrl } from '../lib/ranepaFetch'
+import { createLimiter } from '../lib/rateLimit'
 import { logger } from '../lib/logger'
 
 const log = logger.child({ module: 'ranepa' })
@@ -67,6 +68,9 @@ function lessonRow(
 }
 
 export const ranepaRouter = Router()
+
+// Роутер монтируется после requireAuth, поэтому req.userId уже установлен.
+ranepaRouter.use(createLimiter({ windowMs: 60_000, limit: 10, keyGenerator: (req) => req.userId }))
 
 ranepaRouter.post('/preview', async (req, res, next) => {
   try {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
-import { fetchSchedulePage, isValidRanepaUrl } from './ranepaFetch'
+import { fetchSchedulePage, isValidRanepaUrl, MAX_SCHEDULE_BYTES } from './ranepaFetch'
 
 describe('isValidRanepaUrl', () => {
   it('accepts https schedule pages on spb.ranepa.ru', () => {
@@ -15,10 +15,14 @@ describe('isValidRanepaUrl', () => {
   })
 })
 
-function responseWithUrl(body: string, status: number, url: string): Response {
-  const res = new Response(body, { status })
-  Reflect.defineProperty(res, 'url', { value: url })
-  return res
+const HOME = 'https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/'
+
+function htmlResponse(body: string, status = 200): Response {
+  return new Response(body, { status })
+}
+
+function redirectResponse(status: number, location: string): Response {
+  return new Response(null, { status, headers: { location } })
 }
 
 describe('fetchSchedulePage', () => {
@@ -27,28 +31,65 @@ describe('fetchSchedulePage', () => {
   })
 
   it('returns the html body of a schedule page', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(responseWithUrl('<html>расписание</html>', 200, 'https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/')),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(htmlResponse('<html>расписание</html>')))
 
-    const html = await fetchSchedulePage('https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/')
+    const html = await fetchSchedulePage(HOME)
 
     expect(html).toBe('<html>расписание</html>')
   })
 
   it('throws when the site responds with an error status', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue(responseWithUrl('error', 500, 'https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/')),
-    )
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(htmlResponse('error', 500)))
 
-    await expect(fetchSchedulePage('https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/')).rejects.toThrow('500')
+    await expect(fetchSchedulePage(HOME)).rejects.toThrow('500')
   })
 
-  it('throws when a redirect leads off spb.ranepa.ru', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(responseWithUrl('<html>x</html>', 200, 'https://evil.com/x')))
+  it('rejects a redirect that leads off spb.ranepa.ru', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(redirectResponse(302, 'https://evil.example/x'))
+    vi.stubGlobal('fetch', fetchMock)
 
-    await expect(fetchSchedulePage('https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/')).rejects.toThrow('пределы')
+    await expect(fetchSchedulePage(HOME)).rejects.toThrow('Ссылка ведёт за пределы spb.ranepa.ru')
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('follows redirects within spb.ranepa.ru', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(redirectResponse(301, '/raspisanie/bi-3-24-03-04-semestr/'))
+      .mockResolvedValueOnce(htmlResponse('<html>расписание</html>'))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const html = await fetchSchedulePage(HOME)
+
+    expect(html).toBe('<html>расписание</html>')
+    expect(fetchMock.mock.calls[1][0]).toBe('https://spb.ranepa.ru/raspisanie/bi-3-24-03-04-semestr/')
+  })
+
+  it('rejects more than three redirects', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(redirectResponse(302, 'https://spb.ranepa.ru/raspisanie/next/'))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(fetchSchedulePage(HOME)).rejects.toThrow('Слишком много перенаправлений')
+    expect(fetchMock).toHaveBeenCalledTimes(4)
+  })
+
+  it('rejects a 3xx response without a Location header', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 302 })))
+
+    await expect(fetchSchedulePage(HOME)).rejects.toThrow('статусом 302')
+  })
+
+  it('rejects a body larger than the size cap', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(htmlResponse('a'.repeat(MAX_SCHEDULE_BYTES + 1))))
+
+    await expect(fetchSchedulePage(HOME)).rejects.toThrow('Страница расписания слишком большая')
+  })
+
+  it('rejects a response whose Content-Length exceeds the size cap', async () => {
+    const res = htmlResponse('small')
+    res.headers.set('content-length', String(MAX_SCHEDULE_BYTES + 1))
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(res))
+
+    await expect(fetchSchedulePage(HOME)).rejects.toThrow('Страница расписания слишком большая')
   })
 })

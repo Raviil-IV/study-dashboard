@@ -1,10 +1,10 @@
 import { Router } from 'express'
-import rateLimit from 'express-rate-limit'
 import { eq } from 'drizzle-orm'
 import { db } from '../db/client'
 import { users, visits } from '../db/schema'
 import { loginSchema, registerSchema } from '../lib/validation'
 import { hashPassword, verifyPassword } from '../lib/password'
+import { createLimiter } from '../lib/rateLimit'
 import { clearAuthCookie, setAuthCookie } from '../lib/cookies'
 import { requireAuth } from '../middleware/auth'
 import { logger } from '../lib/logger'
@@ -13,10 +13,9 @@ const log = logger.child({ module: 'auth' })
 
 export const authRouter = Router()
 
-const authLimiter = rateLimit({
+const authLimiter = createLimiter({
   windowMs: 60_000,
   limit: 10,
-  skip: () => process.env.NODE_ENV !== 'production',
 })
 
 authRouter.post('/register', authLimiter, async (req, res, next) => {
