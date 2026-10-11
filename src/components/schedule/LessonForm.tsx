@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import type { Lesson } from '../../types'
 import { WEEKDAYS, SUBJECT_COLORS, COLOR_NAMES } from '../../lib/constants'
-import { toISODate } from '../../lib/date'
+import { parseLocalDate } from '../../lib/date'
 import Input from '../ui/Input'
 import Select from '../ui/Select'
 import Button from '../ui/Button'
@@ -64,7 +64,7 @@ export default function LessonForm({ initial, onSubmit, onCancel, onDelete }: { 
     }
     onSubmit({
       ...values,
-      weekday: values.type === 'once' && values.date ? new Date(values.date).getDay() : values.weekday,
+      weekday: values.type === 'once' && values.date ? parseLocalDate(values.date).getDay() : values.weekday,
     })
   }
 
@@ -86,7 +86,7 @@ export default function LessonForm({ initial, onSubmit, onCancel, onDelete }: { 
       <Input label="Название" value={values.title} onChange={(e) => setValues({ ...values, title: e.target.value })} placeholder="Например: Математика" />
       <div className="grid grid-cols-2 gap-4">
         {values.type === 'once' ? (
-          <Input label="Дата" type="date" min={toISODate(new Date())} value={values.date} onChange={(e) => setValues({ ...values, date: e.target.value })} />
+          <Input label="Дата" type="date" value={values.date} onChange={(e) => setValues({ ...values, date: e.target.value })} />
         ) : (
           <Select label="День недели" value={String(values.weekday)} onChange={(e) => setValues({ ...values, weekday: Number(e.target.value) })}>
             {WEEKDAYS.map((day, i) => (

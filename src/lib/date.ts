@@ -7,6 +7,12 @@ export function toISODate(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
+/** Разбирает YYYY-MM-DD как локальную дату (в отличие от new Date(iso), который даёт UTC-полночь) */
+export function parseLocalDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
 export function formatDate(date: string): string {
   const [y, m, d] = date.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })

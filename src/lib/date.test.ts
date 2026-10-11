@@ -1,6 +1,6 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 import type { Lesson } from '../types'
-import { formatDate, formatTime, isToday, isOverdue, daysUntil, getTodayWeekday, toISODate, isLessonNow, nextLesson, getMonthGrid, isLessonOnDate } from './date'
+import { formatDate, formatTime, isToday, isOverdue, daysUntil, getTodayWeekday, toISODate, isLessonNow, nextLesson, getMonthGrid, isLessonOnDate, parseLocalDate } from './date'
 
 describe('date utils', () => {
   beforeEach(() => {
@@ -129,5 +129,24 @@ describe('isLessonOnDate', () => {
 
     expect(isLessonOnDate(lesson, THURSDAY)).toBe(true)
     expect(isLessonOnDate(lesson, new Date(2026, 7, 7))).toBe(false)
+  })
+})
+
+describe('parseLocalDate', () => {
+  const originalTZ = process.env.TZ
+
+  beforeAll(() => {
+    process.env.TZ = 'America/Los_Angeles'
+  })
+
+  afterAll(() => {
+    if (originalTZ === undefined) delete process.env.TZ
+    else process.env.TZ = originalTZ
+  })
+
+  it('parses YYYY-MM-DD as a local date so the weekday is correct west of UTC', () => {
+    // 2026-10-12 is a Monday. `new Date('2026-10-12')` parses as UTC midnight,
+    // which is still Sunday in America/Los_Angeles.
+    expect(parseLocalDate('2026-10-12').getDay()).toBe(1)
   })
 })
