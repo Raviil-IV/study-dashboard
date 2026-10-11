@@ -77,10 +77,26 @@ describe('FocusPage', () => {
     expect(input.value).toBe('5')
   })
 
-  it('updates the global work duration from the focus page', () => {
+  it('updates the global work duration from the focus page on blur', () => {
     renderPage()
     const input = screen.getByLabelText('Работа (минут)') as HTMLInputElement
     fireEvent.change(input, { target: { value: '50' } })
+    fireEvent.blur(input)
     expect(useStore.getState().settings.pomodoroWorkMinutes).toBe(50)
+  })
+
+  it('allows a long break up to 120 minutes', () => {
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: 'Длинный перерыв' }))
+    const input = screen.getByLabelText('Длинный перерыв (минут)') as HTMLInputElement
+    expect(input.max).toBe('120')
+  })
+
+  it('does not save the duration on every keystroke', () => {
+    renderPage()
+    const input = screen.getByLabelText('Работа (минут)') as HTMLInputElement
+    fireEvent.change(input, { target: { value: '5' } })
+    fireEvent.change(input, { target: { value: '50' } })
+    expect(useStore.getState().settings.pomodoroWorkMinutes).toBe(25)
   })
 })

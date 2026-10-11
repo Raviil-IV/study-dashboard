@@ -56,6 +56,13 @@ export const DEFAULT_SETTINGS: Settings = {
   pomodoroLongBreakMinutes: 15,
 }
 
+// These bounds mirror `settingsSchema` on the server (backend/src/lib/validation.ts).
+export const POMODORO_LIMITS = {
+  pomodoroWorkMinutes: { min: 1, max: 120 },
+  pomodoroShortBreakMinutes: { min: 1, max: 60 },
+  pomodoroLongBreakMinutes: { min: 1, max: 120 },
+} as const
+
 export const DEADLINE_TYPES = [
   { value: 'exam', label: 'Экзамен' },
   { value: 'test', label: 'Контрольная / тест' },

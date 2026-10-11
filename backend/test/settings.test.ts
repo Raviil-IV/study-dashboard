@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import request from 'supertest'
 import { app } from '../src/app'
+import { settingsSchema } from '../src/lib/validation'
 import { createAgent, signUp } from './helpers'
 
 describe('settings', () => {
@@ -27,4 +28,25 @@ describe('settings', () => {
     const res = await agent.put('/api/settings').send({ theme: 'dark', pomodoroWorkMinutes: 0, pomodoroShortBreakMinutes: 5, pomodoroLongBreakMinutes: 15 })
     expect(res.status).toBe(400)
   })
+})
+
+describe('settingsSchema', () => {
+  const base = { theme: 'system', pomodoroWorkMinutes: 25, pomodoroShortBreakMinutes: 5, pomodoroLongBreakMinutes: 15 }
+  const limits = {
+    pomodoroWorkMinutes: 120,
+    pomodoroShortBreakMinutes: 60,
+    pomodoroLongBreakMinutes: 120,
+  } as const
+
+  for (const [field, max] of Object.entries(limits)) {
+    it(`accepts ${field} at the min and max bounds`, () => {
+      expect(settingsSchema.safeParse({ ...base, [field]: 1 }).success).toBe(true)
+      expect(settingsSchema.safeParse({ ...base, [field]: max }).success).toBe(true)
+    })
+
+    it(`rejects ${field} above max and at zero`, () => {
+      expect(settingsSchema.safeParse({ ...base, [field]: max + 1 }).success).toBe(false)
+      expect(settingsSchema.safeParse({ ...base, [field]: 0 }).success).toBe(false)
+    })
+  }
 })

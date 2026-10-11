@@ -2,7 +2,8 @@ import { useStore } from '../store/useStore'
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Select from '../components/ui/Select'
-import Input from '../components/ui/Input'
+import PomodoroDurationInput from '../components/settings/PomodoroDurationInput'
+import { POMODORO_LIMITS } from '../lib/constants'
 
 export default function SettingsPage() {
   const settings = useStore((s) => s.settings)
@@ -21,29 +22,26 @@ export default function SettingsPage() {
         </Card>
         <Card title="Таймер Pomodoro">
           <div className="grid grid-cols-3 gap-4">
-            <Input
+            <PomodoroDurationInput
               label="Работа (минут)"
-              type="number"
-              min={1}
-              max={120}
+              min={POMODORO_LIMITS.pomodoroWorkMinutes.min}
+              max={POMODORO_LIMITS.pomodoroWorkMinutes.max}
               value={settings.pomodoroWorkMinutes}
-              onChange={(e) => updateSettings({ pomodoroWorkMinutes: Math.max(1, Number(e.target.value) || 25) })}
+              onCommit={(v) => updateSettings({ pomodoroWorkMinutes: v })}
             />
-            <Input
+            <PomodoroDurationInput
               label="Короткий перерыв (минут)"
-              type="number"
-              min={1}
-              max={60}
+              min={POMODORO_LIMITS.pomodoroShortBreakMinutes.min}
+              max={POMODORO_LIMITS.pomodoroShortBreakMinutes.max}
               value={settings.pomodoroShortBreakMinutes}
-              onChange={(e) => updateSettings({ pomodoroShortBreakMinutes: Math.max(1, Number(e.target.value) || 5) })}
+              onCommit={(v) => updateSettings({ pomodoroShortBreakMinutes: v })}
             />
-            <Input
+            <PomodoroDurationInput
               label="Длинный перерыв (минут)"
-              type="number"
-              min={1}
-              max={60}
+              min={POMODORO_LIMITS.pomodoroLongBreakMinutes.min}
+              max={POMODORO_LIMITS.pomodoroLongBreakMinutes.max}
               value={settings.pomodoroLongBreakMinutes}
-              onChange={(e) => updateSettings({ pomodoroLongBreakMinutes: Math.max(1, Number(e.target.value) || 15) })}
+              onCommit={(v) => updateSettings({ pomodoroLongBreakMinutes: v })}
             />
           </div>
         </Card>
