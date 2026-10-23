@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { parseScheduleHtml } from './ranepa'
+import { colorForLocation, parseScheduleHtml } from './ranepa'
 
 const row = (cells: string[]): string =>
   `<tr>${cells.map((c, i) => `<td class="column-${i + 1}">${c}</td>`).join('')}</tr>`
@@ -14,6 +14,25 @@ function page(rows: string): string {
 
 // 2026-08-15 — середина лета, перед началом осеннего семестра 2026/27
 const NOW = new Date(2026, 7, 15)
+
+describe('colorForLocation', () => {
+  it.each([
+    ['311', 'green'],
+    ['311а', 'green'],
+    ['ауд. 311', 'green'],
+    ['311/2', 'green'],
+    ['СДО РАНХиГС', 'blue'],
+    ['сдо', 'blue'],
+    ['СДО РАНХиГС 311', 'blue'],
+    ['онлайн', undefined],
+    ['ПРАКТИКА', undefined],
+    ['', undefined],
+    ['   ', undefined],
+    [undefined, undefined],
+  ])('maps %j to %j', (location, expected) => {
+    expect(colorForLocation(location)).toBe(expected)
+  })
+})
 
 describe('parseScheduleHtml', () => {
   it('parses semester rows into lessons with normalized time and date', () => {

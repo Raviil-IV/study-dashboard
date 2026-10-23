@@ -50,6 +50,20 @@ export interface ParsedSchedule {
   groups: ParsedGroup[]
 }
 
+export type LessonColor = 'blue' | 'green'
+
+/**
+ * Цвет занятия в календаре по значению ячейки «Аудитория»:
+ * СДО — синий (приоритет), номер кабинета (значение с цифрой) — зелёный.
+ */
+export function colorForLocation(location?: string): LessonColor | undefined {
+  const value = location?.trim()
+  if (!value) return undefined
+  if (/сдо/i.test(value)) return 'blue'
+  if (/\d/.test(value)) return 'green'
+  return undefined
+}
+
 const TIME_RE = /(\d{1,2})\.(\d{2})\s*-\s*(\d{1,2})\.(\d{2})/
 const FULL_DATE_RE = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/
 

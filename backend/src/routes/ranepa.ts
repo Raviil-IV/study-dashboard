@@ -3,7 +3,7 @@ import { and, eq, isNotNull } from 'drizzle-orm'
 import { z } from 'zod'
 import { db } from '../db/client'
 import { lessons, ranepaImports } from '../db/schema'
-import { parseScheduleHtml, type InvalidLesson, type ParsedLesson } from '../lib/ranepa'
+import { parseScheduleHtml, colorForLocation, type InvalidLesson, type ParsedLesson } from '../lib/ranepa'
 import { fetchSchedulePage, isValidRanepaUrl } from '../lib/ranepaFetch'
 import { createLimiter } from '../lib/rateLimit'
 import { logger } from '../lib/logger'
@@ -63,6 +63,7 @@ function lessonRow(
     date: data.date,
     location: data.location,
     note: [data.type, data.teacher].filter(Boolean).join(' · ') || undefined,
+    color: colorForLocation(data.location),
     sourceUrl: url,
   }
 }

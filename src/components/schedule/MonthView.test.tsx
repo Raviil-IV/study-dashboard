@@ -10,6 +10,10 @@ const weekdayLessons: Lesson[] = [
 const onceLesson: Lesson[] = [
   { id: '2', type: 'once', title: 'Семинар', weekday: 5, startTime: '13:00', endTime: '14:00', date: '2026-08-07' },
 ]
+const coloredOnceLessons: Lesson[] = [
+  { id: '3', type: 'once', title: 'Синяя пара', weekday: 4, startTime: '09:00', endTime: '10:00', date: '2026-08-06', color: 'blue' },
+  { id: '4', type: 'once', title: 'Зелёная пара', weekday: 4, startTime: '11:00', endTime: '12:00', date: '2026-08-06', color: 'green' },
+]
 // Five one-off lessons on a single date (2026-08-06, Thursday) — used to test the per-cell limit.
 const fiveOnceInOneDay: Lesson[] = Array.from({ length: 5 }, (_, i) => ({
   id: String(i + 1),
@@ -50,6 +54,12 @@ describe('MonthView', () => {
   it('shows a one-off lesson only on its date', () => {
     renderView(onceLesson)
     expect(screen.getByText('Семинар')).toBeInTheDocument()
+  })
+
+  it('shows a colored marker for each lesson color', () => {
+    const { container } = renderView(coloredOnceLessons)
+    expect(container.querySelectorAll('.bg-blue-500')).toHaveLength(1)
+    expect(container.querySelectorAll('.bg-green-500')).toHaveLength(1)
   })
 
   it('limits cell to 4 lessons and shows "+ ещё N"', () => {

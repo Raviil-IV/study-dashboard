@@ -118,6 +118,7 @@ describe('ranepa import', () => {
       location: '311',
       note: 'К · доц. Гурьева Т.Н.',
       sourceUrl: URL_A,
+      color: 'green',
     })
 
     const status = await agent.get('/api/ranepa/status')
@@ -148,6 +149,7 @@ describe('ranepa import', () => {
     expect(res.status).toBe(200)
     expect(res.body.count).toBe(1)
     expect(res.body.lessons[0].title).toBe('Новое занятие')
+    expect(res.body.lessons[0].color).toBe('blue')
 
     const state = await agent.get('/api/state')
     expect(state.body.lessons).toHaveLength(2)
@@ -174,6 +176,7 @@ describe('ranepa import', () => {
       endTime: '21:20',
       note: 'ПЗ · доц. Киселев Н.Е.',
       sourceUrl: URL_A,
+      color: null,
     })
   })
 
