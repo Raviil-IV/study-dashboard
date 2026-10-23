@@ -19,6 +19,7 @@ export const users = pgTable('users', {
   login: text('login').unique().notNull(),
   role: text('role', { enum: ['user', 'admin'] }).notNull().default('user'),
   passwordHash: text('password_hash').notNull(),
+  tokenVersion: integer('token_version').notNull().default(0),
   createdAt: timestamp('created_at', { mode: 'string', withTimezone: true }).notNull().defaultNow(),
 })
 

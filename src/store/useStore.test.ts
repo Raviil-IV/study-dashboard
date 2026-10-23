@@ -54,6 +54,49 @@ describe('useStore', () => {
     expect(patchMock).toHaveBeenCalledWith(`/tasks/${id}`, expect.objectContaining({ status: 'done' }))
   })
 
+  it('un-completing a task sends completedAt null so the server clears it', () => {
+    patchMock.mockResolvedValue({} as Task)
+    useStore.setState({
+      tasks: [{ id: 't1', title: 'Готово', priority: 'low', status: 'done', createdAt: '2026-09-01T09:00:00.000Z', completedAt: '2026-09-02T10:00:00.000Z' }],
+    })
+    useStore.getState().toggleTask('t1')
+    expect(patchMock).toHaveBeenCalledWith('/tasks/t1', { status: 'todo', completedAt: null })
+    expect(useStore.getState().tasks[0].completedAt).toBeNull()
+  })
+
+  it('updateTask sets completedAt when the status changes to done', () => {
+    patchMock.mockResolvedValue({} as Task)
+    useStore.setState({
+      tasks: [{ id: 't2', title: 'Задача', priority: 'low', status: 'todo', createdAt: '2026-09-01T09:00:00.000Z' }],
+    })
+    useStore.getState().updateTask('t2', { status: 'done' })
+    const completedAt = useStore.getState().tasks[0].completedAt
+    expect(completedAt).toEqual(expect.any(String))
+    expect(completedAt).toBe(new Date(completedAt as string).toISOString())
+    expect(patchMock).toHaveBeenCalledWith('/tasks/t2', { status: 'done', completedAt })
+  })
+
+  it('updateTask clears completedAt when the status changes away from done', () => {
+    patchMock.mockResolvedValue({} as Task)
+    useStore.setState({
+      tasks: [{ id: 't3', title: 'Задача', priority: 'low', status: 'done', createdAt: '2026-09-01T09:00:00.000Z', completedAt: '2026-09-02T10:00:00.000Z' }],
+    })
+    useStore.getState().updateTask('t3', { status: 'todo' })
+    expect(useStore.getState().tasks[0].completedAt).toBeNull()
+    expect(patchMock).toHaveBeenCalledWith('/tasks/t3', { status: 'todo', completedAt: null })
+  })
+
+  it('updateTask without a status change leaves completedAt untouched', () => {
+    patchMock.mockResolvedValue({} as Task)
+    useStore.setState({
+      tasks: [{ id: 't4', title: 'Задача', priority: 'low', status: 'done', createdAt: '2026-09-01T09:00:00.000Z', completedAt: '2026-09-02T10:00:00.000Z' }],
+    })
+    useStore.getState().updateTask('t4', { title: 'Новое название' })
+    expect(useStore.getState().tasks[0].completedAt).toBe('2026-09-02T10:00:00.000Z')
+    expect(patchMock).toHaveBeenCalledWith('/tasks/t4', { title: 'Новое название' })
+    expect(patchMock.mock.calls[0][1]).not.toHaveProperty('completedAt')
+  })
+
   it('rolls back an optimistic patch on failure', async () => {
     postMock.mockImplementation(async (_path: string, task: Task) => task)
     useStore.getState().addTask({ title: 'A', priority: 'low', status: 'todo' })

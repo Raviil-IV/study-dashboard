@@ -21,7 +21,12 @@ function toPartial(schema: ZodTypeAny): ZodTypeAny {
   return (current as { partial: () => ZodTypeAny }).partial()
 }
 
-export function createEntityRouter(table: AnyPgTable, schema: ZodTypeAny): Router {
+export interface EntityRouterOptions {
+  // Поля, от которых зависят кросс-полевые правила схемы (.refine). Полная проверка объединённой записи запускается только если PATCH их трогает.
+  crossFieldKeys?: readonly string[]
+}
+
+export function createEntityRouter(table: AnyPgTable, schema: ZodTypeAny, options: EntityRouterOptions = {}): Router {
   const router = Router()
   const ids = { id: 'id', userId: 'userId' } as const
   const column = (name: string) => (table as unknown as Record<string, unknown>)[name] as never
@@ -47,8 +52,25 @@ const parsed = schema.parse(body) as Record<string, unknown>
 
   router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const partial = toPartial(schema)
-      const parsed = partial.parse(req.body) as Record<string, unknown>
+      const [existing] = await db
+        .select()
+        .from(table)
+        .where(and(eq(column(ids.id), req.params.id), eq(column(ids.userId), req.userId)))
+      if (!existing) {
+        notFound(res)
+        return
+      }
+      const parsed = toPartial(schema).parse(req.body) as Record<string, unknown>
+      // Записи, созданные мимо схемы (например, импорт РАНХиГС), могут нарушать кросс-полевые правила.
+      // Поэтому полная проверка объединённой записи нужна только если PATCH трогает связанные поля.
+      // NULL из БД считаем отсутствием значения, иначе опциональные поля не пройдут проверку.
+      const crossFieldTouched = (options.crossFieldKeys ?? []).some((key) => parsed[key] !== undefined)
+      if (crossFieldTouched) {
+        const merged = Object.fromEntries(
+          Object.entries(existing).filter(([key, value]) => key !== ids.userId && value !== null),
+        )
+        schema.parse({ ...merged, ...parsed })
+      }
       const [row] = await db
         .update(table)
         .set(parsed)

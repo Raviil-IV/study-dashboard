@@ -10,3 +10,11 @@ export function cacheState(state: ServerState): void {
 export function loadCachedState(): ServerState | null {
   return loadFromStorage<ServerState | null>(CACHE_KEY, null)
 }
+
+export function clearCachedState(): void {
+  try {
+    localStorage.removeItem(CACHE_KEY)
+  } catch {
+    // storage unavailable — ignore
+  }
+}

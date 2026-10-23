@@ -4,8 +4,8 @@ import { signToken } from './jwt'
 export const COOKIE_NAME = 'auth_token'
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
-export function setAuthCookie(res: Response, userId: string): void {
-  res.cookie(COOKIE_NAME, signToken(userId), {
+export function setAuthCookie(res: Response, userId: string, tokenVersion: number): void {
+  res.cookie(COOKIE_NAME, signToken(userId, tokenVersion), {
     httpOnly: true,
     secure: false,
     sameSite: 'lax',
