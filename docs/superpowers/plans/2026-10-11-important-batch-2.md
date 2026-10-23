@@ -163,3 +163,26 @@
 6. Commit as `test: add playwright smoke test for the docker-compose stack`.
 
 **Report:** the exact result of `npm run e2e`, the list of scenarios, and the side effects (image retagging, the `sd-e2e` volume removed at the end).
+
+---
+
+## Task 7: Session-expired toast is invisible and gets overwritten
+
+**Context (found by the Task 6 e2e run, item 4 defect in the merged batch 1):** the toast is rendered inside `AppLayout` (`src/components/layout/AppLayout.tsx`, `role="alert"` block plus its 4s auto-hide effect), but `AppLayout` sits inside `ProtectedRoute`. On a 401, `handleUnauthorized` sets status to `guest`, `ProtectedRoute` redirects to `/login`, `AppLayout` unmounts, and the toast never shows. In addition, the failed request's own `.catch` calls `notifyError(err)` (`src/store/useStore.ts` `addTask`, and the same pattern in other mutation actions), which overwrites the session message with the 401 message (`Требуется вход`).
+
+**Files:** `src/components/ui/Toaster.tsx` (new), `src/components/ui/Toaster.test.tsx` (new), `src/App.tsx`, `src/components/layout/AppLayout.tsx`, `src/lib/toast.ts`, `src/lib/toast.test.ts` (new or extend), `e2e/smoke.spec.ts` (only if the toast text or flow needs adjusting to the real behavior).
+
+**Behavior:**
+- New `Toaster` component renders the current `useToast` message as `role="alert"` with the same classes and auto-hides after 4 seconds. Render it once in `App.tsx` outside `Routes`, so it survives route changes and auth-state changes. Remove the toast block and its effect from `AppLayout`.
+- `notifyError(err)` must ignore `ApiError` with `status === 401`: the unauthorized handler owns that UX, so mutation catches must not overwrite the session message.
+
+**Steps (TDD):**
+1. Failing tests first:
+   - `Toaster.test.tsx`: renders the store message with `role="alert"` and hides it after the timeout (fake timers); renders nothing when the message is null.
+   - `toast.test.ts`: `notifyError(new ApiError(401, 'UNAUTHORIZED', 'Требуется вход'))` does not set a message; `notifyError(new ApiError(500, 'INTERNAL', 'x'))` does.
+   - A test that the toast survives the guest redirect is hard to unit-test; cover it in e2e (scenario 5), and state that in the report.
+2. Implement, run focused tests, then root `npm test` and `npx tsc -b`, and `cd backend && npm test` (must stay green).
+3. Rerun e2e against the real stack, exactly as in Task 6 (project `sd-e2e`, port 8099, inline secrets, `down -v` at the end). All five scenarios must pass. Report the exact output.
+4. Commit as `fix: show the session-expired toast outside the protected layout`.
+
+**Acceptance:** all five e2e scenarios pass; the session toast is visible on `/login`; unit suites and both type checks are green.
