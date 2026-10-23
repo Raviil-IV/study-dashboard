@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Lesson } from '../../types'
 import { getMonthGrid, isLessonOnDate, toISODate } from '../../lib/date'
 import { WEEKDAYS_SHORT, COLOR_CLASSES } from '../../lib/constants'
+import { importedLessonClasses } from '../../lib/lessonStyle'
 import IconButton from '../ui/IconButton'
 import Button from '../ui/Button'
 
@@ -58,19 +59,24 @@ export default function MonthView({ lessons, onEdit }: { lessons: Lesson[]; onEd
                 {visible.length === 0 ? (
                   <p className="text-[10px] text-gray-400">—</p>
                 ) : (
-                  visible.map((l) => (
-                    <button
-                      key={l.id}
-                      type="button"
-                      onClick={() => onEdit(l)}
-                      title={l.title}
-                      className="flex w-full items-center gap-1 rounded bg-gray-50 px-1 py-0.5 text-left transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    >
-                      {l.color && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
-                      <span className="text-[10px] text-gray-500 dark:text-gray-400">{l.startTime}</span>
-                      <span className="min-w-0 flex-1 truncate text-[10px] font-medium text-gray-800 dark:text-gray-200">{l.title}</span>
-                    </button>
-                  ))
+                  visible.map((l) => {
+                    const style = importedLessonClasses(l)
+                    return (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={() => onEdit(l)}
+                        title={l.title}
+                        className={`flex w-full items-center gap-1 rounded px-1 py-0.5 text-left transition-colors ${
+                          style ? style.surface : 'bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {!style && l.color && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
+                        <span className={`text-[10px] ${style ? style.meta : 'text-gray-500 dark:text-gray-400'}`}>{l.startTime}</span>
+                        <span className={`min-w-0 flex-1 truncate text-[10px] font-medium ${style ? style.title : 'text-gray-800 dark:text-gray-200'}`}>{l.title}</span>
+                      </button>
+                    )
+                  })
                 )}
                 {extra > 0 && <p className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400">+ ещё {extra}</p>}
               </div>
