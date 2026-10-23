@@ -79,8 +79,8 @@ describe('MonthView', () => {
     renderView(importedOnceLesson)
     const title = screen.getByText('СДО пара')
     const chip = title.closest('button')
-    expect(chip?.className).toContain('bg-[#013A33]/30')
-    expect(title.className).toContain('text-[#013A33]')
+    expect(chip?.className).toContain('bg-[#00382B]/30')
+    expect(title.className).toContain('text-[#00382B]')
     expect(chip?.querySelector('.bg-blue-500')).toBeNull()
   })
 

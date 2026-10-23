@@ -10,14 +10,14 @@ describe('importedLessonClasses', () => {
 
   it('uses the sand tone for СДО lessons', () => {
     const style = importedLessonClasses({ sourceUrl: SOURCE, color: 'blue' })
-    expect(style?.surface).toContain('bg-[#013A33]/30')
-    expect(style?.title).toContain('text-[#013A33]')
+    expect(style?.surface).toContain('bg-[#00382B]/30')
+    expect(style?.title).toContain('text-[#00382B]')
   })
 
   it('uses the thistle tone for lessons with a room number', () => {
     const style = importedLessonClasses({ sourceUrl: SOURCE, color: 'green' })
-    expect(style?.surface).toContain('bg-[#A17A99]/30')
-    expect(style?.title).toContain('text-[#5C3D55]')
+    expect(style?.surface).toContain('bg-[#3D0E69]/30')
+    expect(style?.title).toContain('text-[#3D0E69]')
   })
 
   it('falls back to the neutral tone for imported lessons without a colour', () => {

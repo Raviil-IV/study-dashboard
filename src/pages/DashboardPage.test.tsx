@@ -103,11 +103,11 @@ describe('DashboardPage', () => {
     )
 
     const importedRow = screen.getByText('Пара из РАНХиГС').closest('li')
-    expect(importedRow?.className).toContain('bg-[#A17A99]/30')
+    expect(importedRow?.className).toContain('bg-[#3D0E69]/30')
     expect(importedRow?.querySelector('.bg-green-500')).toBeNull()
 
     const manualRow = screen.getByText('Своя пара').closest('li')
-    expect(manualRow?.className).not.toContain('bg-[#A17A99]/30')
+    expect(manualRow?.className).not.toContain('bg-[#3D0E69]/30')
     expect(manualRow?.querySelector('.bg-green-500')).not.toBeNull()
   })
 })
