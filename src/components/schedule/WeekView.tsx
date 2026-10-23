@@ -1,6 +1,7 @@
 import type { Lesson } from '../../types'
 import { isLessonOnDate, toISODate } from '../../lib/date'
 import { WEEKDAYS_SHORT, COLOR_CLASSES } from '../../lib/constants'
+import { importedLessonClasses } from '../../lib/lessonStyle'
 
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
@@ -29,20 +30,25 @@ export default function WeekView({ lessons, onEdit }: { lessons: Lesson[]; onEdi
               {dayLessons.length === 0 ? (
                 <p className="text-xs text-gray-400">—</p>
               ) : (
-                dayLessons.map((l) => (
-                  <button
-                    key={l.id}
-                    type="button"
-                    onClick={() => onEdit(l)}
-                    className="w-full rounded-md bg-gray-50 px-2 py-1.5 text-left transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      {l.color && <span className={`h-2 w-2 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
-                      <span className="truncate text-xs font-medium text-gray-800 dark:text-gray-200">{l.title}</span>
-                    </span>
-                    <span className="block text-[11px] text-gray-500 dark:text-gray-400">{l.startTime}–{l.endTime}</span>
-                  </button>
-                ))
+                dayLessons.map((l) => {
+                  const style = importedLessonClasses(l)
+                  return (
+                    <button
+                      key={l.id}
+                      type="button"
+                      onClick={() => onEdit(l)}
+                      className={`w-full rounded-md px-2 py-1.5 text-left transition-colors ${
+                        style ? style.surface : 'bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {!style && l.color && <span className={`h-2 w-2 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
+                        <span className={`truncate text-xs font-medium ${style ? style.title : 'text-gray-800 dark:text-gray-200'}`}>{l.title}</span>
+                      </span>
+                      <span className={`block text-[11px] ${style ? style.meta : 'text-gray-500 dark:text-gray-400'}`}>{l.startTime}–{l.endTime}</span>
+                    </button>
+                  )
+                })
               )}
             </div>
           </div>

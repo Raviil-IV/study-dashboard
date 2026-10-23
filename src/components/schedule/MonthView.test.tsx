@@ -14,6 +14,19 @@ const coloredOnceLessons: Lesson[] = [
   { id: '3', type: 'once', title: 'Синяя пара', weekday: 4, startTime: '09:00', endTime: '10:00', date: '2026-08-06', color: 'blue' },
   { id: '4', type: 'once', title: 'Зелёная пара', weekday: 4, startTime: '11:00', endTime: '12:00', date: '2026-08-06', color: 'green' },
 ]
+const importedOnceLesson: Lesson[] = [
+  {
+    id: '9',
+    type: 'once',
+    title: 'СДО пара',
+    weekday: 4,
+    startTime: '15:00',
+    endTime: '16:00',
+    date: '2026-08-06',
+    color: 'blue',
+    sourceUrl: 'https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/',
+  },
+]
 // Five one-off lessons on a single date (2026-08-06, Thursday) — used to test the per-cell limit.
 const fiveOnceInOneDay: Lesson[] = Array.from({ length: 5 }, (_, i) => ({
   id: String(i + 1),
@@ -60,6 +73,15 @@ describe('MonthView', () => {
     const { container } = renderView(coloredOnceLessons)
     expect(container.querySelectorAll('.bg-blue-500')).toHaveLength(1)
     expect(container.querySelectorAll('.bg-green-500')).toHaveLength(1)
+  })
+
+  it('fills an imported lesson and drops its dot', () => {
+    renderView(importedOnceLesson)
+    const title = screen.getByText('СДО пара')
+    const chip = title.closest('button')
+    expect(chip?.className).toContain('bg-[#00382B]/30')
+    expect(title.className).toContain('text-[#00382B]')
+    expect(chip?.querySelector('.bg-blue-500')).toBeNull()
   })
 
   it('limits cell to 4 lessons and shows "+ ещё N"', () => {
