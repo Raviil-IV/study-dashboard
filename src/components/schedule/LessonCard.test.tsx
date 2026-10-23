@@ -20,9 +20,9 @@ describe('LessonCard', () => {
   it('tints the whole card for an imported lesson', () => {
     render(<LessonCard lesson={imported} isNow={false} onEdit={() => {}} />)
     const card = screen.getByRole('button')
-    expect(card.className).toContain('bg-[#B89BB2]/30')
+    expect(card.className).toContain('bg-[#A17A99]/30')
     expect(card.querySelector('.bg-green-500')).toBeNull()
-    expect(screen.getByText(/09:00/).className).toContain('text-[#7A6280]')
+    expect(screen.getByText(/09:00/).className).toContain('text-[#6E4C66]')
   })
 
   it('keeps the white card and the dot for a manual lesson', () => {

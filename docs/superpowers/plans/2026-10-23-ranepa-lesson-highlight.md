@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Импортированные из РАНХиГС занятия отображаются полностью закрашенными полупрозрачными плашками (`#CFAA7D` для СДО, `#B89BB2` для кабинета, нейтральный тон для остальных) вместо светлой карточки с точкой.
+**Goal:** Импортированные из РАНХиГС занятия отображаются полностью закрашенными полупрозрачными плашками (`#013A33` для СДО, `#A17A99` для кабинета, нейтральный тон для остальных) вместо светлой карточки с точкой.
 
 **Architecture:** Один модуль `src/lib/lessonStyle.ts` — единственный источник палитры. Он определяет импортированное занятие по `sourceUrl` и возвращает набор Tailwind-классов. Четыре компонента применяют результат; вёрстка, размеры и ручные занятия не меняются.
 
@@ -45,14 +45,14 @@ describe('importedLessonClasses', () => {
 
   it('uses the sand tone for СДО lessons', () => {
     const style = importedLessonClasses({ sourceUrl: SOURCE, color: 'blue' })
-    expect(style?.surface).toContain('bg-[#CFAA7D]/30')
-    expect(style?.title).toContain('text-[#6B4A18]')
+    expect(style?.surface).toContain('bg-[#013A33]/30')
+    expect(style?.title).toContain('text-[#013A33]')
   })
 
   it('uses the thistle tone for lessons with a room number', () => {
     const style = importedLessonClasses({ sourceUrl: SOURCE, color: 'green' })
-    expect(style?.surface).toContain('bg-[#B89BB2]/30')
-    expect(style?.title).toContain('text-[#573F5A]')
+    expect(style?.surface).toContain('bg-[#A17A99]/30')
+    expect(style?.title).toContain('text-[#5C3D55]')
   })
 
   it('falls back to the neutral tone for imported lessons without a colour', () => {
@@ -86,16 +86,16 @@ type Tone = 'sdo' | 'room' | 'neutral'
 
 const TONES: Record<Tone, ImportedLessonClasses> = {
   sdo: {
-    surface: 'bg-[#CFAA7D]/30 hover:bg-[#CFAA7D]/40 dark:bg-[#CFAA7D]/20 dark:hover:bg-[#CFAA7D]/30',
-    surfaceStatic: 'bg-[#CFAA7D]/30 dark:bg-[#CFAA7D]/20',
-    title: 'text-[#6B4A18] dark:text-[#EBD3A9]',
-    meta: 'text-[#8A6534] dark:text-[#C3A87F]',
+    surface: 'bg-[#013A33]/30 hover:bg-[#013A33]/40 dark:bg-[#013A33]/20 dark:hover:bg-[#013A33]/30',
+    surfaceStatic: 'bg-[#013A33]/30 dark:bg-[#013A33]/20',
+    title: 'text-[#013A33] dark:text-[#9FD8CB]',
+    meta: 'text-[#1B5048] dark:text-[#78B7AA]',
   },
   room: {
-    surface: 'bg-[#B89BB2]/30 hover:bg-[#B89BB2]/40 dark:bg-[#B89BB2]/20 dark:hover:bg-[#B89BB2]/30',
-    surfaceStatic: 'bg-[#B89BB2]/30 dark:bg-[#B89BB2]/20',
-    title: 'text-[#573F5A] dark:text-[#E3CFDF]',
-    meta: 'text-[#7A6280] dark:text-[#BCA6B8]',
+    surface: 'bg-[#A17A99]/30 hover:bg-[#A17A99]/40 dark:bg-[#A17A99]/20 dark:hover:bg-[#A17A99]/30',
+    surfaceStatic: 'bg-[#A17A99]/30 dark:bg-[#A17A99]/20',
+    title: 'text-[#5C3D55] dark:text-[#E3CFDF]',
+    meta: 'text-[#6E4C66] dark:text-[#C9A9C1]',
   },
   neutral: {
     surface: 'bg-[#9CA3AF]/25 hover:bg-[#9CA3AF]/35 dark:bg-[#9CA3AF]/15 dark:hover:bg-[#9CA3AF]/25',
@@ -164,8 +164,8 @@ it('fills an imported lesson and drops its dot', () => {
   renderView(importedOnceLesson)
   const title = screen.getByText('СДО пара')
   const chip = title.closest('button')
-  expect(chip?.className).toContain('bg-[#CFAA7D]/30')
-  expect(title.className).toContain('text-[#6B4A18]')
+  expect(chip?.className).toContain('bg-[#013A33]/30')
+  expect(title.className).toContain('text-[#013A33]')
   expect(chip?.querySelector('.bg-blue-500')).toBeNull()
 })
 ```
@@ -173,7 +173,7 @@ it('fills an imported lesson and drops its dot', () => {
 - [ ] **Step 2: Убедиться, что тест падает**
 
 Run: `npx vitest run src/components/schedule/MonthView.test.tsx`
-Expected: FAIL — класс `bg-[#CFAA7D]/30` отсутствует.
+Expected: FAIL — класс `bg-[#013A33]/30` отсутствует.
 
 - [ ] **Step 3: Переписать рендер чипа**
 
@@ -264,7 +264,7 @@ describe('WeekView', () => {
   it('fills an imported lesson and drops its dot', () => {
     render(<WeekView lessons={imported} onEdit={() => {}} />)
     const chip = screen.getByText('СДО пара').closest('button')
-    expect(chip?.className).toContain('bg-[#CFAA7D]/30')
+    expect(chip?.className).toContain('bg-[#013A33]/30')
     expect(chip?.querySelector('.bg-blue-500')).toBeNull()
   })
 
@@ -360,9 +360,9 @@ describe('LessonCard', () => {
   it('tints the whole card for an imported lesson', () => {
     render(<LessonCard lesson={imported} isNow={false} onEdit={() => {}} />)
     const card = screen.getByRole('button')
-    expect(card.className).toContain('bg-[#B89BB2]/30')
+    expect(card.className).toContain('bg-[#A17A99]/30')
     expect(card.querySelector('.bg-green-500')).toBeNull()
-    expect(screen.getByText(/09:00/).className).toContain('text-[#7A6280]')
+    expect(screen.getByText(/09:00/).className).toContain('text-[#6E4C66]')
   })
 
   it('keeps the white card and the dot for a manual lesson', () => {
@@ -477,11 +477,11 @@ it('fills imported lessons in the schedule card', () => {
   )
 
   const importedRow = screen.getByText('Пара из РАНХиГС').closest('li')
-  expect(importedRow?.className).toContain('bg-[#B89BB2]/30')
+  expect(importedRow?.className).toContain('bg-[#A17A99]/30')
   expect(importedRow?.querySelector('.bg-green-500')).toBeNull()
 
   const manualRow = screen.getByText('Своя пара').closest('li')
-  expect(manualRow?.className).not.toContain('bg-[#B89BB2]/30')
+  expect(manualRow?.className).not.toContain('bg-[#A17A99]/30')
   expect(manualRow?.querySelector('.bg-green-500')).not.toBeNull()
 })
 ```

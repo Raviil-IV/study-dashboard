@@ -13,16 +13,16 @@ type Tone = 'sdo' | 'room' | 'neutral'
 
 const TONES: Record<Tone, ImportedLessonClasses> = {
   sdo: {
-    surface: 'bg-[#CFAA7D]/30 hover:bg-[#CFAA7D]/40 dark:bg-[#CFAA7D]/20 dark:hover:bg-[#CFAA7D]/30',
-    surfaceStatic: 'bg-[#CFAA7D]/30 dark:bg-[#CFAA7D]/20',
-    title: 'text-[#6B4A18] dark:text-[#EBD3A9]',
-    meta: 'text-[#8A6534] dark:text-[#C3A87F]',
+    surface: 'bg-[#013A33]/30 hover:bg-[#013A33]/40 dark:bg-[#013A33]/20 dark:hover:bg-[#013A33]/30',
+    surfaceStatic: 'bg-[#013A33]/30 dark:bg-[#013A33]/20',
+    title: 'text-[#013A33] dark:text-[#9FD8CB]',
+    meta: 'text-[#1B5048] dark:text-[#78B7AA]',
   },
   room: {
-    surface: 'bg-[#B89BB2]/30 hover:bg-[#B89BB2]/40 dark:bg-[#B89BB2]/20 dark:hover:bg-[#B89BB2]/30',
-    surfaceStatic: 'bg-[#B89BB2]/30 dark:bg-[#B89BB2]/20',
-    title: 'text-[#573F5A] dark:text-[#E3CFDF]',
-    meta: 'text-[#7A6280] dark:text-[#BCA6B8]',
+    surface: 'bg-[#A17A99]/30 hover:bg-[#A17A99]/40 dark:bg-[#A17A99]/20 dark:hover:bg-[#A17A99]/30',
+    surfaceStatic: 'bg-[#A17A99]/30 dark:bg-[#A17A99]/20',
+    title: 'text-[#5C3D55] dark:text-[#E3CFDF]',
+    meta: 'text-[#6E4C66] dark:text-[#C9A9C1]',
   },
   neutral: {
     surface: 'bg-[#9CA3AF]/25 hover:bg-[#9CA3AF]/35 dark:bg-[#9CA3AF]/15 dark:hover:bg-[#9CA3AF]/25',

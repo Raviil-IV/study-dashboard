@@ -32,7 +32,7 @@ describe('WeekView', () => {
   it('fills an imported lesson and drops its dot', () => {
     render(<WeekView lessons={imported} onEdit={() => {}} />)
     const chip = screen.getByText('СДО пара').closest('button')
-    expect(chip?.className).toContain('bg-[#CFAA7D]/30')
+    expect(chip?.className).toContain('bg-[#013A33]/30')
     expect(chip?.querySelector('.bg-blue-500')).toBeNull()
   })
 
