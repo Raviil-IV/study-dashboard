@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import BottomNav from './BottomNav'
@@ -6,12 +5,9 @@ import ThemeToggle from './ThemeToggle'
 import OfflineBanner from './OfflineBanner'
 import FloatingTimer from '../focus/FloatingTimer'
 import { useAuth } from '../../store/useAuth'
-import { useToast } from '../../lib/toast'
 import { usePomodoroEngine } from '../../hooks/usePomodoroEngine'
 
 export default function AppLayout() {
-  const toastMessage = useToast((s) => s.message)
-  const hideToast = useToast((s) => s.hide)
   const user = useAuth((s) => s.user)
 
   usePomodoroEngine()
@@ -19,12 +15,6 @@ export default function AppLayout() {
   const handleLogout = () => {
     void useAuth.getState().logout()
   }
-
-  useEffect(() => {
-    if (!toastMessage) return
-    const timer = setTimeout(hideToast, 4000)
-    return () => clearTimeout(timer)
-  }, [toastMessage, hideToast])
 
   return (
     <div className="min-h-full bg-gray-50 dark:bg-gray-950">
@@ -50,14 +40,6 @@ export default function AppLayout() {
       </div>
       <BottomNav />
       <FloatingTimer />
-      {toastMessage && (
-        <div
-          role="alert"
-          className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white shadow-lg"
-        >
-          {toastMessage}
-        </div>
-      )}
     </div>
   )
 }
