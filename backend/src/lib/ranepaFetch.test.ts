@@ -52,6 +52,15 @@ describe('fetchSchedulePage', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
+  it('rejects a redirect with an unparseable Location header', async () => {
+    // Relative resolution keeps "ht!tp://%%%" valid, so use a value that really throws.
+    const location = 'http://%%%'
+    expect(() => new URL(location, HOME)).toThrow(TypeError)
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(redirectResponse(302, location)))
+
+    await expect(fetchSchedulePage(HOME)).rejects.toThrow('РАНХиГС вернул некорректную ссылку перенаправления')
+  })
+
   it('follows redirects within spb.ranepa.ru', async () => {
     const fetchMock = vi
       .fn()

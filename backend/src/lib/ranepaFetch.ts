@@ -5,6 +5,7 @@ export const MAX_SCHEDULE_BYTES = 2 * 1024 * 1024
 const OUT_OF_HOST_MESSAGE = 'Ссылка ведёт за пределы spb.ranepa.ru'
 const TOO_MANY_REDIRECTS_MESSAGE = 'Слишком много перенаправлений'
 const TOO_LARGE_MESSAGE = 'Страница расписания слишком большая'
+const BAD_REDIRECT_MESSAGE = 'РАНХиГС вернул некорректную ссылку перенаправления'
 
 export function isValidRanepaUrl(raw: string): boolean {
   try {
@@ -21,6 +22,14 @@ function statusError(status: number): Error {
 
 function isRedirect(status: number): boolean {
   return status >= 300 && status < 400
+}
+
+function parseRedirectLocation(location: string, base: string): URL {
+  try {
+    return new URL(location, base)
+  } catch {
+    throw new Error(BAD_REDIRECT_MESSAGE)
+  }
 }
 
 async function readCappedBody(res: Response): Promise<string> {
@@ -67,7 +76,7 @@ export async function fetchSchedulePage(url: string): Promise<string> {
       if (!location) {
         throw statusError(res.status)
       }
-      const next = new URL(location, currentUrl)
+      const next = parseRedirectLocation(location, currentUrl)
       if (next.protocol !== 'https:' || next.hostname !== RANEPA_HOST) {
         throw new Error(OUT_OF_HOST_MESSAGE)
       }
