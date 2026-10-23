@@ -67,4 +67,47 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Регулярная пара')).toBeInTheDocument()
     expect(screen.queryByText('Пара через неделю')).not.toBeInTheDocument()
   })
+
+  it('fills imported lessons in the schedule card', () => {
+    const now = new Date()
+    useStore.setState({
+      lessons: [
+        {
+          id: 'i1',
+          type: 'once',
+          weekday: now.getDay(),
+          startTime: '09:00',
+          endTime: '10:00',
+          date: toISODate(now),
+          title: 'Пара из РАНХиГС',
+          color: 'green',
+          sourceUrl: 'https://spb.ranepa.ru/raspisanie/bi-4-24-02-semestr/',
+        },
+        {
+          id: 'i2',
+          type: 'once',
+          weekday: now.getDay(),
+          startTime: '11:00',
+          endTime: '12:00',
+          date: toISODate(now),
+          title: 'Своя пара',
+          color: 'green',
+        },
+      ],
+    })
+
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    )
+
+    const importedRow = screen.getByText('Пара из РАНХиГС').closest('li')
+    expect(importedRow?.className).toContain('bg-[#B89BB2]/30')
+    expect(importedRow?.querySelector('.bg-green-500')).toBeNull()
+
+    const manualRow = screen.getByText('Своя пара').closest('li')
+    expect(manualRow?.className).not.toContain('bg-[#B89BB2]/30')
+    expect(manualRow?.querySelector('.bg-green-500')).not.toBeNull()
+  })
 })
