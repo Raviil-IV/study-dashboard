@@ -46,4 +46,29 @@ describe('LessonForm', () => {
       weekday: 0, // 2020-03-15 was a Sunday, parsed locally
     })
   })
+
+  it('hides the time inputs when the whole-day checkbox is on', async () => {
+    const user = userEvent.setup()
+    render(<LessonForm {...baseProps} />)
+    expect(screen.getByLabelText('Начало')).toBeInTheDocument()
+    await user.click(screen.getByLabelText('Весь день'))
+    expect(screen.queryByLabelText('Начало')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Конец')).not.toBeInTheDocument()
+  })
+
+  it('submits an all-day event with the sentinel times', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn()
+    render(<LessonForm {...baseProps} onSubmit={onSubmit} />)
+    await user.type(screen.getByLabelText('Название'), 'Конференция')
+    await user.click(screen.getByLabelText('Весь день'))
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      title: 'Конференция',
+      allDay: true,
+      startTime: '00:00',
+      endTime: '23:59',
+    })
+  })
 })

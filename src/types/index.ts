@@ -9,6 +9,7 @@ export interface Lesson {
   location?: string
   note?: string
   color?: string
+  allDay?: boolean // событие без конкретного времени
   sourceUrl?: string // ссылка на страницу расписания РАНХиГС, из которой занятие импортировано
 }
 

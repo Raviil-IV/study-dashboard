@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useStore } from '../store/useStore'
 import type { Lesson, RanepaImportStatus } from '../types'
-import { nextLesson, pluralRu } from '../lib/date'
+import { nextLesson, pluralRu, lessonTimeLabel, toISODate } from '../lib/date'
 import { api } from '../lib/api'
 import { useToast } from '../lib/toast'
 import PageHeader from '../components/ui/PageHeader'
@@ -25,6 +25,7 @@ export default function SchedulePage() {
   const removeRanepaImports = useStore((s) => s.removeRanepaImports)
   const [view, setView] = useState<'day' | 'week' | 'month'>('day')
   const [modalOpen, setModalOpen] = useState(false)
+  const [newDate, setNewDate] = useState<string | undefined>()
   const [editing, setEditing] = useState<Lesson | undefined>()
   const [importOpen, setImportOpen] = useState(false)
   const [ranepaImports, setRanepaImports] = useState<RanepaImportStatus[]>([])
@@ -75,10 +76,17 @@ export default function SchedulePage() {
 
   const openAdd = () => {
     setEditing(undefined)
+    setNewDate(undefined)
+    setModalOpen(true)
+  }
+  const openAddOnDate = (date: Date) => {
+    setEditing(undefined)
+    setNewDate(toISODate(date))
     setModalOpen(true)
   }
   const openEdit = (lesson: Lesson) => {
     setEditing(lesson)
+    setNewDate(undefined)
     setModalOpen(true)
   }
   const handleSubmit = (values: LessonFormValues) => {
@@ -91,7 +99,7 @@ export default function SchedulePage() {
     setModalOpen(false)
   }
   const handleDelete = (id: string) => {
-    if (window.confirm('Удалить занятие?')) {
+    if (window.confirm('Удалить событие?')) {
       removeLesson(id)
       setModalOpen(false)
     }
@@ -115,18 +123,18 @@ export default function SchedulePage() {
     <div>
       <PageHeader
         title="Расписание"
-        subtitle={next ? `Следующее занятие: ${next.title} · ${next.startTime}` : 'Занятий пока нет'}
+        subtitle={next ? `Следующее событие: ${next.title} · ${lessonTimeLabel(next)}` : 'Событий пока нет'}
         action={
           <>
             {ranepaImports.length > 0 && (
-              <Button variant="danger" onClick={handleDeleteImport}>
+              <Button variant="subtleDanger" onClick={handleDeleteImport}>
                 Удалить импорт
               </Button>
             )}
             <Button variant="secondary" onClick={() => setImportOpen(true)}>
               {ranepaImports.length > 0 ? 'Обновить из РАНХиГС' : 'Импорт из РАНХиГС'}
             </Button>
-            <Button onClick={openAdd}>Добавить занятие</Button>
+            <Button variant="subtle" onClick={openAdd}>Добавить событие</Button>
           </>
         }
       />
@@ -146,12 +154,13 @@ export default function SchedulePage() {
       ) : view === 'week' ? (
         <WeekView lessons={lessons} onEdit={openEdit} />
       ) : (
-        <MonthView lessons={lessons} onEdit={openEdit} />
+        <MonthView lessons={lessons} onEdit={openEdit} onAdd={openAddOnDate} />
       )}
-      <Modal open={modalOpen} title={editing ? 'Редактировать занятие' : 'Новое занятие'} onClose={() => setModalOpen(false)}>
+      <Modal open={modalOpen} title={editing ? 'Редактировать событие' : 'Новое событие'} onClose={() => setModalOpen(false)}>
         <LessonForm
-          key={editing?.id ?? 'new'}
+          key={editing?.id ?? newDate ?? 'new'}
           initial={editing}
+          initialDate={newDate}
           onSubmit={handleSubmit}
           onCancel={() => setModalOpen(false)}
           onDelete={editing ? () => handleDelete(editing.id) : undefined}

@@ -110,4 +110,28 @@ describe('DashboardPage', () => {
     expect(manualRow?.className).not.toContain('bg-[#3D0E69]/30')
     expect(manualRow?.querySelector('.bg-green-500')).not.toBeNull()
   })
+
+  it('shows «Весь день» for an all-day event', () => {
+    const now = new Date()
+    useStore.setState({
+      lessons: [
+        {
+          id: 'a1',
+          type: 'once',
+          weekday: now.getDay(),
+          startTime: '00:00',
+          endTime: '23:59',
+          date: toISODate(now),
+          title: 'Конференция',
+          allDay: true,
+        },
+      ],
+    })
+    render(
+      <MemoryRouter>
+        <DashboardPage />
+      </MemoryRouter>,
+    )
+    expect(screen.getByText('Весь день')).toBeInTheDocument()
+  })
 })

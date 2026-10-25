@@ -53,6 +53,39 @@ describe('SchedulePage', () => {
     expect(screen.getByText('Математика')).toBeInTheDocument()
   })
 
+  it('creates an all-day event from the form', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Добавить событие' }))
+    await user.type(screen.getByLabelText('Название'), 'День открытых дверей')
+    await user.selectOptions(screen.getByLabelText('День недели'), '4')
+    await user.click(screen.getByLabelText('Весь день'))
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+
+    const added = useStore.getState().lessons.at(-1)
+    expect(added?.allDay).toBe(true)
+    expect(added?.startTime).toBe('00:00')
+    expect(screen.getByText('Весь день')).toBeInTheDocument()
+  })
+
+  it('opens a new event form with the date clicked in the month grid', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Месяц' }))
+    await user.click(screen.getByRole('button', { name: 'Добавить событие: 7 августа' }))
+
+    expect(screen.getByText('Новое событие')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'На конкретную дату' })).toBeChecked()
+    expect(screen.getByLabelText('Дата')).toHaveValue('2026-08-07')
+
+    await user.type(screen.getByLabelText('Название'), 'Конференция')
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+
+    const added = useStore.getState().lessons.at(-1)
+    expect(added?.type).toBe('once')
+    expect(added?.date).toBe('2026-08-07')
+  })
+
   it('switches to week view', async () => {
     const user = userEvent.setup()
     renderPage()
@@ -63,7 +96,7 @@ describe('SchedulePage', () => {
   it('adds a lesson via the modal form', async () => {
     const user = userEvent.setup()
     renderPage()
-    await user.click(screen.getByRole('button', { name: 'Добавить занятие' }))
+    await user.click(screen.getByRole('button', { name: 'Добавить событие' }))
     await user.type(screen.getByLabelText('Название'), 'Физика')
     await user.selectOptions(screen.getByLabelText('День недели'), '4')
     await user.click(screen.getByRole('button', { name: 'Сохранить' }))
@@ -75,7 +108,7 @@ describe('SchedulePage', () => {
   it('adds a one-off lesson on a specific date', async () => {
     const user = userEvent.setup()
     renderPage()
-    await user.click(screen.getByRole('button', { name: 'Добавить занятие' }))
+    await user.click(screen.getByRole('button', { name: 'Добавить событие' }))
     await user.type(screen.getByLabelText('Название'), 'Консультация')
     await user.click(screen.getByRole('radio', { name: 'На конкретную дату' }))
     fireEvent.change(screen.getByLabelText('Дата'), { target: { value: '2026-08-07' } })
@@ -89,7 +122,7 @@ describe('SchedulePage', () => {
   it('requires a date for one-off lessons', async () => {
     const user = userEvent.setup()
     renderPage()
-    await user.click(screen.getByRole('button', { name: 'Добавить занятие' }))
+    await user.click(screen.getByRole('button', { name: 'Добавить событие' }))
     await user.type(screen.getByLabelText('Название'), 'Консультация')
     await user.click(screen.getByRole('radio', { name: 'На конкретную дату' }))
     await user.click(screen.getByRole('button', { name: 'Сохранить' }))
@@ -107,7 +140,7 @@ describe('SchedulePage', () => {
     const user = userEvent.setup()
     renderPage()
     await user.click(screen.getAllByRole('button', { name: /Математика/ })[0])
-    expect(screen.getByText('Редактировать занятие')).toBeInTheDocument()
+    expect(screen.getByText('Редактировать событие')).toBeInTheDocument()
   })
 
   it('opens the edit modal when a week view lesson is clicked', async () => {
@@ -115,7 +148,7 @@ describe('SchedulePage', () => {
     renderPage()
     await user.click(screen.getByRole('button', { name: 'Неделя' }))
     await user.click(screen.getAllByRole('button', { name: /Математика/ })[0])
-    expect(screen.getByText('Редактировать занятие')).toBeInTheDocument()
+    expect(screen.getByText('Редактировать событие')).toBeInTheDocument()
   })
 
   it('deletes a lesson via the edit modal from the week view', async () => {
@@ -126,7 +159,7 @@ describe('SchedulePage', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
     await user.click(screen.getByRole('button', { name: 'Удалить' }))
     expect(useStore.getState().lessons).toHaveLength(0)
-    expect(screen.queryByText('Редактировать занятие')).not.toBeInTheDocument()
+    expect(screen.queryByText('Редактировать событие')).not.toBeInTheDocument()
   })
 
   it('deletes a lesson via the edit modal from the month view', async () => {
@@ -142,7 +175,7 @@ describe('SchedulePage', () => {
   it('validates end time after start time', async () => {
     const user = userEvent.setup()
     renderPage()
-    await user.click(screen.getByRole('button', { name: 'Добавить занятие' }))
+    await user.click(screen.getByRole('button', { name: 'Добавить событие' }))
     await user.type(screen.getByLabelText('Название'), 'Физика')
     await user.clear(screen.getByLabelText('Начало'))
     await user.type(screen.getByLabelText('Начало'), '12:00')
@@ -167,7 +200,7 @@ describe('SchedulePage', () => {
     renderPage()
     await user.click(screen.getByRole('button', { name: 'Месяц' }))
     await user.click(screen.getAllByRole('button', { name: /Математика/ })[0])
-    expect(screen.getByText('Редактировать занятие')).toBeInTheDocument()
+    expect(screen.getByText('Редактировать событие')).toBeInTheDocument()
   })
 
   it('shows the ranepa import button and opens the import modal', async () => {

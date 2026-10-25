@@ -1,5 +1,5 @@
 import type { Lesson } from '../../types'
-import { isLessonOnDate, toISODate } from '../../lib/date'
+import { isLessonOnDate, toISODate, lessonTimeLabel } from '../../lib/date'
 import { WEEKDAYS_SHORT, COLOR_CLASSES } from '../../lib/constants'
 import { importedLessonClasses } from '../../lib/lessonStyle'
 
@@ -45,7 +45,7 @@ export default function WeekView({ lessons, onEdit }: { lessons: Lesson[]; onEdi
                         {!style && l.color && <span className={`h-2 w-2 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
                         <span className={`truncate text-xs font-medium ${style ? style.title : 'text-gray-800 dark:text-gray-200'}`}>{l.title}</span>
                       </span>
-                      <span className={`block text-[11px] ${style ? style.meta : 'text-gray-500 dark:text-gray-400'}`}>{l.startTime}–{l.endTime}</span>
+                      <span className={`block text-[11px] ${style ? style.meta : 'text-gray-500 dark:text-gray-400'}`}>{lessonTimeLabel(l)}</span>
                     </button>
                   )
                 })

@@ -16,6 +16,7 @@ export interface LessonFormValues {
   color: string
   type: 'weekly' | 'once'
   date: string
+  allDay: boolean
 }
 
 const DEFAULT_VALUES: LessonFormValues = {
@@ -28,33 +29,62 @@ const DEFAULT_VALUES: LessonFormValues = {
   color: 'blue',
   type: 'weekly',
   date: '',
+  allDay: false,
 }
 
-export default function LessonForm({ initial, onSubmit, onCancel, onDelete }: { initial?: Lesson; onSubmit: (values: LessonFormValues) => void; onCancel: () => void; onDelete?: () => void }) {
-  const [values, setValues] = useState<LessonFormValues>(() =>
-    initial
-      ? {
-          title: initial.title,
-          weekday: initial.weekday,
-          startTime: initial.startTime,
-          endTime: initial.endTime,
-          location: initial.location ?? '',
-          note: initial.note ?? '',
-          color: initial.color ?? 'blue',
-          type: initial.type ?? 'weekly',
-          date: initial.date ?? '',
-        }
-      : DEFAULT_VALUES,
-  )
+export default function LessonForm({
+  initial,
+  initialDate,
+  onSubmit,
+  onCancel,
+  onDelete,
+}: {
+  initial?: Lesson
+  initialDate?: string
+  onSubmit: (values: LessonFormValues) => void
+  onCancel: () => void
+  onDelete?: () => void
+}) {
+  const [values, setValues] = useState<LessonFormValues>(() => {
+    if (initial) {
+      return {
+        title: initial.title,
+        weekday: initial.weekday,
+        startTime: initial.allDay ? '00:00' : initial.startTime,
+        endTime: initial.allDay ? '23:59' : initial.endTime,
+        location: initial.location ?? '',
+        note: initial.note ?? '',
+        color: initial.color ?? 'blue',
+        type: initial.type ?? 'weekly',
+        date: initial.date ?? '',
+        allDay: initial.allDay ?? false,
+      }
+    }
+    if (initialDate) return { ...DEFAULT_VALUES, type: 'once', date: initialDate }
+    return DEFAULT_VALUES
+  })
+  // Время, к которому вернёмся при снятии флага «Весь день».
+  const [timed, setTimed] = useState(() => ({
+    startTime: initial?.allDay || !initial ? '09:00' : initial.startTime,
+    endTime: initial?.allDay || !initial ? '10:30' : initial.endTime,
+  }))
   const [error, setError] = useState('')
+
+  const toggleAllDay = (checked: boolean) => {
+    if (checked) {
+      setValues({ ...values, allDay: true, startTime: '00:00', endTime: '23:59' })
+    } else {
+      setValues({ ...values, allDay: false, ...timed })
+    }
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (!values.title.trim()) {
-      setError('Введите название занятия')
+      setError('Введите название события')
       return
     }
-    if (values.endTime <= values.startTime) {
+    if (!values.allDay && values.endTime <= values.startTime) {
       setError('Время конца должно быть позже времени начала')
       return
     }
@@ -71,7 +101,7 @@ export default function LessonForm({ initial, onSubmit, onCancel, onDelete }: { 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <fieldset>
-        <legend className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Тип занятия</legend>
+        <legend className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">Тип события</legend>
         <div className="flex gap-4">
           <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
             <input type="radio" name="lessonType" checked={values.type === 'weekly'} onChange={() => setValues({ ...values, type: 'weekly' })} />
@@ -83,6 +113,10 @@ export default function LessonForm({ initial, onSubmit, onCancel, onDelete }: { 
           </label>
         </div>
       </fieldset>
+      <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <input type="checkbox" checked={values.allDay} onChange={(e) => toggleAllDay(e.target.checked)} />
+        Весь день
+      </label>
       <Input label="Название" value={values.title} onChange={(e) => setValues({ ...values, title: e.target.value })} placeholder="Например: Математика" />
       <div className="grid grid-cols-2 gap-4">
         {values.type === 'once' ? (
@@ -100,10 +134,28 @@ export default function LessonForm({ initial, onSubmit, onCancel, onDelete }: { 
           ))}
         </Select>
       </div>
-      <div className="grid grid-cols-2 gap-4">
-        <Input label="Начало" type="time" value={values.startTime} onChange={(e) => setValues({ ...values, startTime: e.target.value })} />
-        <Input label="Конец" type="time" value={values.endTime} onChange={(e) => setValues({ ...values, endTime: e.target.value })} />
-      </div>
+      {!values.allDay && (
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Начало"
+            type="time"
+            value={values.startTime}
+            onChange={(e) => {
+              setValues({ ...values, startTime: e.target.value })
+              setTimed((t) => ({ ...t, startTime: e.target.value }))
+            }}
+          />
+          <Input
+            label="Конец"
+            type="time"
+            value={values.endTime}
+            onChange={(e) => {
+              setValues({ ...values, endTime: e.target.value })
+              setTimed((t) => ({ ...t, endTime: e.target.value }))
+            }}
+          />
+        </div>
+      )}
       <Input label="Кабинет / ссылка" value={values.location} onChange={(e) => setValues({ ...values, location: e.target.value })} placeholder="Каб. 201 или ссылка" />
       <Input label="Заметка" value={values.note} onChange={(e) => setValues({ ...values, note: e.target.value })} />
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

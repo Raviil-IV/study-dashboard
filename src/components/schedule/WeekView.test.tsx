@@ -42,4 +42,10 @@ describe('WeekView', () => {
     expect(chip?.className).toContain('bg-gray-50')
     expect(chip?.querySelector('.bg-blue-500')).not.toBeNull()
   })
+
+  it('shows «Весь день» for an all-day event', () => {
+    const allDay: Lesson[] = [{ ...manual[0], id: '3', title: 'Конференция', allDay: true, startTime: '00:00', endTime: '23:59' }]
+    render(<WeekView lessons={allDay} onEdit={() => {}} />)
+    expect(screen.getByText('Весь день')).toBeInTheDocument()
+  })
 })

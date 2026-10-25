@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest'
 import type { Lesson } from '../types'
-import { formatDate, formatTime, isToday, isOverdue, daysUntil, getTodayWeekday, toISODate, isLessonNow, nextLesson, getMonthGrid, isLessonOnDate, parseLocalDate } from './date'
+import { formatDate, formatTime, isToday, isOverdue, daysUntil, getTodayWeekday, toISODate, isLessonNow, nextLesson, getMonthGrid, isLessonOnDate, parseLocalDate, lessonTimeLabel } from './date'
 
 describe('date utils', () => {
   beforeEach(() => {
@@ -101,6 +101,24 @@ describe('date utils', () => {
     expect(grid[0].iso).toBe('2026-11-30')
     expect(grid[41].iso).toBe('2027-01-10')
     expect(grid.filter((d) => d.inMonth)).toHaveLength(31)
+  })
+
+  it('lessonTimeLabel shows the time range or «Весь день»', () => {
+    expect(lessonTimeLabel({ startTime: '09:00', endTime: '10:30' })).toBe('09:00 – 10:30')
+    expect(lessonTimeLabel({ allDay: true, startTime: '00:00', endTime: '23:59' })).toBe('Весь день')
+  })
+
+  it('isLessonNow treats an all-day event as running for the whole day', () => {
+    expect(isLessonNow({ weekday: 4, startTime: '00:00', endTime: '23:59', allDay: true })).toBe(true)
+    expect(isLessonNow({ weekday: 5, startTime: '00:00', endTime: '23:59', allDay: true })).toBe(false)
+  })
+
+  it('nextLesson keeps today’s all-day event as the nearest one', () => {
+    const lessons = [
+      { id: 'a', title: 'Конференция', weekday: 4, startTime: '00:00', endTime: '23:59', allDay: true },
+      { id: 'b', title: 'Физика', weekday: 4, startTime: '14:00', endTime: '15:00' },
+    ] as Lesson[]
+    expect(nextLesson(lessons)?.id).toBe('a')
   })
 })
 

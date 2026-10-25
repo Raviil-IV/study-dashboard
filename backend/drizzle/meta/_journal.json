@@ -50,6 +50,13 @@
       "when": 1791405555252,
       "tag": "0006_lucky_dreaming_celestial",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792923879328,
+      "tag": "0007_brave_luminals",
+      "breakpoints": true
     }
   ]
 }

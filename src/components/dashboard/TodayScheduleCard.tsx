@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Lesson } from '../../types'
-import { isLessonNow, isLessonOnDate } from '../../lib/date'
+import { isLessonNow, isLessonOnDate, lessonTimeLabel } from '../../lib/date'
 import { COLOR_CLASSES } from '../../lib/constants'
 import { importedLessonClasses } from '../../lib/lessonStyle'
 import Card from '../ui/Card'
@@ -20,7 +20,7 @@ export default function TodayScheduleCard({ lessons }: { lessons: Lesson[] }) {
               <li key={l.id} className={`flex items-center gap-2 rounded px-2 py-1 text-sm ${style ? style.surfaceStatic : ''}`}>
                 {!style && l.color && <span className={`h-2 w-2 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
                 <span className={`min-w-0 flex-1 truncate ${style ? style.title : 'text-gray-800 dark:text-gray-200'}`}>{l.title}</span>
-                <span className={`shrink-0 text-xs ${style ? style.meta : 'text-gray-500 dark:text-gray-400'}`}>{l.startTime}</span>
+                <span className={`shrink-0 text-xs ${style ? style.meta : 'text-gray-500 dark:text-gray-400'}`}>{lessonTimeLabel(l)}</span>
                 {isLessonNow(l) && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">сейчас</span>}
               </li>
             )

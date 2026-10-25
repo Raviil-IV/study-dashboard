@@ -1,0 +1,1 @@
+ALTER TABLE "lessons" ADD COLUMN "all_day" boolean DEFAULT false NOT NULL;
