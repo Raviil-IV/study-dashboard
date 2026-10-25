@@ -11,7 +11,7 @@ export default function DayView({ lessons, date, onEdit }: { lessons: Lesson[]; 
         {date.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
       </p>
       {dayLessons.length === 0 ? (
-        <p className="rounded-xl bg-white p-8 text-center text-sm text-gray-400 ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">Занятий нет</p>
+        <p className="rounded-xl bg-white p-8 text-center text-sm text-gray-400 ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">Событий нет</p>
       ) : (
         dayLessons.map((l) => (
           <LessonCard

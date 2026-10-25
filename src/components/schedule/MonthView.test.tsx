@@ -84,6 +84,15 @@ describe('MonthView', () => {
     expect(chip?.querySelector('.bg-blue-500')).toBeNull()
   })
 
+  it('omits the time for an all-day event', () => {
+    const allDay: Lesson[] = [
+      { id: '10', type: 'once', title: 'Конференция', weekday: 4, startTime: '00:00', endTime: '23:59', date: '2026-08-06', allDay: true },
+    ]
+    renderView(allDay)
+    expect(screen.getByText('Конференция')).toBeInTheDocument()
+    expect(screen.queryByText('00:00')).not.toBeInTheDocument()
+  })
+
   it('limits cell to 4 lessons and shows "+ ещё N"', () => {
     renderView(fiveOnceInOneDay)
     expect(screen.getAllByText(/Занятие \d/)).toHaveLength(4)

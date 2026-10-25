@@ -31,4 +31,11 @@ describe('LessonCard', () => {
     expect(card.className).toContain('bg-white')
     expect(card.querySelector('.bg-green-500')).not.toBeNull()
   })
+
+  it('shows «Весь день» for an all-day event', () => {
+    const allDay: Lesson = { ...manual, id: '3', title: 'Конференция', allDay: true, startTime: '00:00', endTime: '23:59' }
+    render(<LessonCard lesson={allDay} isNow={false} onEdit={() => {}} />)
+    expect(screen.getByText(/Весь день/)).toBeInTheDocument()
+    expect(screen.queryByText(/00:00/)).not.toBeInTheDocument()
+  })
 })

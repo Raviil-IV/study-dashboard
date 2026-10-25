@@ -72,7 +72,7 @@ export default function MonthView({ lessons, onEdit }: { lessons: Lesson[]; onEd
                         }`}
                       >
                         {!style && l.color && <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${COLOR_CLASSES[l.color]?.dot ?? 'bg-gray-400'}`} />}
-                        <span className={`text-[10px] ${style ? style.meta : 'text-gray-500 dark:text-gray-400'}`}>{l.startTime}</span>
+                        {!l.allDay && <span className={`text-[10px] ${style ? style.meta : 'text-gray-500 dark:text-gray-400'}`}>{l.startTime}</span>}
                         <span className={`min-w-0 flex-1 truncate text-[10px] font-medium ${style ? style.title : 'text-gray-800 dark:text-gray-200'}`}>{l.title}</span>
                       </button>
                     )

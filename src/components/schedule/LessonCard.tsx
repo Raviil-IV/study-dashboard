@@ -1,6 +1,7 @@
 import type { Lesson } from '../../types'
 import { COLOR_CLASSES } from '../../lib/constants'
 import { importedLessonClasses } from '../../lib/lessonStyle'
+import { lessonTimeLabel } from '../../lib/date'
 
 export default function LessonCard({ lesson, isNow, onEdit }: { lesson: Lesson; isNow: boolean; onEdit: () => void }) {
   const style = importedLessonClasses(lesson)
@@ -19,7 +20,7 @@ export default function LessonCard({ lesson, isNow, onEdit }: { lesson: Lesson; 
           {isNow && <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300">сейчас</span>}
         </span>
         <span className={`mt-0.5 block text-sm ${style ? style.meta : 'text-gray-500 dark:text-gray-400'}`}>
-          {lesson.startTime} – {lesson.endTime}
+          {lessonTimeLabel(lesson)}
           {lesson.location && ` · ${lesson.location}`}
         </span>
         {lesson.note && <span className={`block text-xs ${style ? style.meta : 'text-gray-400 dark:text-gray-500'}`}>{lesson.note}</span>}

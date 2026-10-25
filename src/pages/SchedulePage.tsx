@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useStore } from '../store/useStore'
 import type { Lesson, RanepaImportStatus } from '../types'
-import { nextLesson, pluralRu } from '../lib/date'
+import { nextLesson, pluralRu, lessonTimeLabel } from '../lib/date'
 import { api } from '../lib/api'
 import { useToast } from '../lib/toast'
 import PageHeader from '../components/ui/PageHeader'
@@ -91,7 +91,7 @@ export default function SchedulePage() {
     setModalOpen(false)
   }
   const handleDelete = (id: string) => {
-    if (window.confirm('Удалить занятие?')) {
+    if (window.confirm('Удалить событие?')) {
       removeLesson(id)
       setModalOpen(false)
     }
@@ -115,18 +115,18 @@ export default function SchedulePage() {
     <div>
       <PageHeader
         title="Расписание"
-        subtitle={next ? `Следующее занятие: ${next.title} · ${next.startTime}` : 'Занятий пока нет'}
+        subtitle={next ? `Следующее событие: ${next.title} · ${lessonTimeLabel(next)}` : 'Событий пока нет'}
         action={
           <>
             {ranepaImports.length > 0 && (
-              <Button variant="danger" onClick={handleDeleteImport}>
+              <Button variant="subtleDanger" onClick={handleDeleteImport}>
                 Удалить импорт
               </Button>
             )}
             <Button variant="secondary" onClick={() => setImportOpen(true)}>
               {ranepaImports.length > 0 ? 'Обновить из РАНХиГС' : 'Импорт из РАНХиГС'}
             </Button>
-            <Button onClick={openAdd}>Добавить занятие</Button>
+            <Button variant="subtle" onClick={openAdd}>Добавить событие</Button>
           </>
         }
       />
@@ -148,7 +148,7 @@ export default function SchedulePage() {
       ) : (
         <MonthView lessons={lessons} onEdit={openEdit} />
       )}
-      <Modal open={modalOpen} title={editing ? 'Редактировать занятие' : 'Новое занятие'} onClose={() => setModalOpen(false)}>
+      <Modal open={modalOpen} title={editing ? 'Редактировать событие' : 'Новое событие'} onClose={() => setModalOpen(false)}>
         <LessonForm
           key={editing?.id ?? 'new'}
           initial={editing}
