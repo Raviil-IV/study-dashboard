@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'danger'
+type Variant = 'primary' | 'secondary' | 'danger' | 'subtle' | 'subtleDanger'
 type Size = 'sm' | 'md'
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,6 +12,10 @@ const variantClasses: Record<Variant, string> = {
   primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus-visible:ring-indigo-500',
   secondary: 'bg-white text-gray-700 ring-1 ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-600 dark:hover:bg-gray-700',
   danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500',
+  subtle:
+    'bg-indigo-100 text-indigo-700 hover:bg-indigo-200 focus-visible:ring-indigo-400 dark:bg-indigo-900/40 dark:text-indigo-300 dark:hover:bg-indigo-900/60',
+  subtleDanger:
+    'bg-red-50 text-red-700 hover:bg-red-100 focus-visible:ring-red-400 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50',
 }
 
 const sizeClasses: Record<Size, string> = {
