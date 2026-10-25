@@ -62,13 +62,18 @@ export function currentWeekMonday(): Date {
   return monday
 }
 
-export function isLessonNow(lesson: { type?: 'weekly' | 'once'; date?: string; weekday: number; startTime: string; endTime: string }): boolean {
+export function lessonTimeLabel(lesson: { allDay?: boolean; startTime: string; endTime: string }): string {
+  return lesson.allDay ? 'Весь день' : `${lesson.startTime} – ${lesson.endTime}`
+}
+
+export function isLessonNow(lesson: { type?: 'weekly' | 'once'; date?: string; weekday: number; startTime: string; endTime: string; allDay?: boolean }): boolean {
   const now = new Date()
   if (lesson.type === 'once') {
     if (lesson.date !== toISODate(now)) return false
   } else if (lesson.weekday !== now.getDay()) {
     return false
   }
+  if (lesson.allDay) return true
   const minutes = now.getHours() * 60 + now.getMinutes()
   const [sh, sm] = lesson.startTime.split(':').map(Number)
   const [eh, em] = lesson.endTime.split(':').map(Number)
@@ -85,7 +90,7 @@ export function nextLesson(lessons: Lesson[]): Lesson | null {
   const future: { lesson: Lesson; key: number }[] = []
   for (const lesson of lessons) {
     const [h, m] = lesson.startTime.split(':').map(Number)
-    const start = h * 60 + m
+    const start = lesson.allDay ? 0 : h * 60 + m
     let diffDays: number
     if (lesson.type === 'once') {
       if (lesson.date && lesson.date < toISODate(now)) continue
@@ -94,7 +99,7 @@ export function nextLesson(lessons: Lesson[]): Lesson | null {
       diffDays = (lesson.weekday - today + 7) % 7
     }
     let key: number
-    if (diffDays === 0 && start <= nowMinutes) {
+    if (diffDays === 0 && !lesson.allDay && start <= nowMinutes) {
       key = 7 * 1440 + start
     } else {
       key = diffDays * 1440 + start
