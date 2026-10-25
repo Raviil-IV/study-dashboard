@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import MonthView from './MonthView'
 import type { Lesson } from '../../types'
+import { toISODate } from '../../lib/date'
 
 const weekdayLessons: Lesson[] = [
   { id: '1', type: 'weekly', title: 'Математика', weekday: 4, startTime: '09:00', endTime: '10:30', color: 'blue' },
@@ -46,8 +47,8 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-function renderView(lessons: Lesson[] = []) {
-  return render(<MonthView lessons={lessons} onEdit={() => {}} />)
+function renderView(lessons: Lesson[] = [], onAdd: (date: Date) => void = () => {}) {
+  return render(<MonthView lessons={lessons} onEdit={() => {}} onAdd={onAdd} />)
 }
 
 describe('MonthView', () => {
@@ -123,10 +124,28 @@ describe('MonthView', () => {
   it('opens edit on lesson click and has no per-lesson buttons', async () => {
     const user = userEvent.setup()
     const onEdit = vi.fn()
-    render(<MonthView lessons={weekdayLessons} onEdit={onEdit} />)
+    render(<MonthView lessons={weekdayLessons} onEdit={onEdit} onAdd={() => {}} />)
     await user.click(screen.getAllByRole('button', { name: /Математика/ })[0])
     expect(onEdit).toHaveBeenCalledWith(weekdayLessons[0])
     expect(screen.queryByRole('button', { name: 'Редактировать' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Удалить' })).not.toBeInTheDocument()
+  })
+
+  it('adds an event for the clicked day of the current month', async () => {
+    const user = userEvent.setup()
+    const onAdd = vi.fn()
+    renderView([], onAdd)
+    await user.click(screen.getByRole('button', { name: 'Добавить событие: 6 августа' }))
+    expect(onAdd).toHaveBeenCalledTimes(1)
+    expect(toISODate(onAdd.mock.calls[0][0])).toBe('2026-08-06')
+  })
+
+  it('adds an event for a grey date of the next month without switching the month', async () => {
+    const user = userEvent.setup()
+    const onAdd = vi.fn()
+    renderView([], onAdd)
+    await user.click(screen.getByRole('button', { name: 'Добавить событие: 1 сентября' }))
+    expect(toISODate(onAdd.mock.calls[0][0])).toBe('2026-09-01')
+    expect(screen.getByText(/август 2026/)).toBeInTheDocument()
   })
 })

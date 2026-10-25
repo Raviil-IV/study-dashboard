@@ -11,7 +11,15 @@ const MAX_LESSONS = 4
 // getMonthGrid starts weeks on Monday; WEEKDAYS_SHORT is Sunday-first (indexed by getDay()).
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0]
 
-export default function MonthView({ lessons, onEdit }: { lessons: Lesson[]; onEdit: (l: Lesson) => void }) {
+export default function MonthView({
+  lessons,
+  onEdit,
+  onAdd,
+}: {
+  lessons: Lesson[]
+  onEdit: (l: Lesson) => void
+  onAdd: (date: Date) => void
+}) {
   const today = new Date()
   const [cursor, setCursor] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const grid = getMonthGrid(cursor.getFullYear(), cursor.getMonth())
@@ -52,9 +60,16 @@ export default function MonthView({ lessons, onEdit }: { lessons: Lesson[]; onEd
                 isToday ? 'ring-2 ring-indigo-500' : 'ring-gray-200 dark:ring-gray-800'
               } ${day.inMonth ? '' : 'opacity-40'}`}
             >
-              <p className={`text-xs font-medium ${day.inMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-600'}`}>
+              <button
+                type="button"
+                onClick={() => onAdd(day.date)}
+                aria-label={`Добавить событие: ${day.date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}`}
+                className={`-mx-1 rounded px-1 text-xs font-medium transition-colors hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:hover:bg-gray-800 ${
+                  day.inMonth ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-600'
+                }`}
+              >
                 {day.date.getDate()}
-              </p>
+              </button>
               <div className="mt-1 space-y-1">
                 {visible.length === 0 ? (
                   <p className="text-[10px] text-gray-400">—</p>
