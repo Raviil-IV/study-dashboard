@@ -26,6 +26,30 @@ describe('entities CRUD', () => {
     expect(res.body.userId).toBeTruthy()
   })
 
+  it('stores the allDay flag and toggles it with a patch', async () => {
+    const agent = createAgent()
+    await signUp(agent, 'all-day')
+    const id = randomUUID()
+    const created = await agent
+      .post('/api/lessons')
+      .send({ ...lessonPayload(id), allDay: true, startTime: '00:00', endTime: '23:59' })
+    expect(created.status).toBe(201)
+    expect(created.body.allDay).toBe(true)
+
+    const patched = await agent.patch(`/api/lessons/${id}`).send({ allDay: false })
+    expect(patched.status).toBe(200)
+    expect(patched.body.allDay).toBe(false)
+  })
+
+  it('defaults allDay to false for a row inserted without the flag', async () => {
+    const agent = createAgent()
+    const { res: reg } = await signUp(agent, 'all-day-default')
+    const id = randomUUID()
+    await db.insert(lessons).values({ ...lessonPayload(id), userId: reg.body.id })
+    const [row] = await db.select().from(lessons).where(eq(lessons.id, id))
+    expect(row.allDay).toBe(false)
+  })
+
   it('returns 409 CONFLICT when a lesson with the same id already exists', async () => {
     const agent = createAgent()
     await signUp(agent, 'dup-lesson')

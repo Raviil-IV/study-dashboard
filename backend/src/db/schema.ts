@@ -38,6 +38,7 @@ export const lessons = pgTable(
     note: text('note'),
     color: varchar('color', { length: 20 }),
     sourceUrl: text('source_url'),
+    allDay: boolean('all_day').notNull().default(false),
   },
   (t) => [index('lessons_user_idx').on(t.userId)],
 )

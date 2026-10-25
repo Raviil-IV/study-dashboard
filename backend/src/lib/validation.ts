@@ -33,6 +33,7 @@ export const lessonSchema = z
     location: z.string().trim().max(200).optional(),
     note: z.string().trim().max(2000).optional(),
     color: z.string().max(20).optional(),
+    allDay: z.boolean().optional(),
   })
   .refine((l) => l.endTime > l.startTime, {
     message: 'Время конца должно быть позже времени начала',
