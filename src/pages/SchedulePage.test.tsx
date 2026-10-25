@@ -68,6 +68,24 @@ describe('SchedulePage', () => {
     expect(screen.getByText('Весь день')).toBeInTheDocument()
   })
 
+  it('opens a new event form with the date clicked in the month grid', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: 'Месяц' }))
+    await user.click(screen.getByRole('button', { name: 'Добавить событие: 7 августа' }))
+
+    expect(screen.getByText('Новое событие')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: 'На конкретную дату' })).toBeChecked()
+    expect(screen.getByLabelText('Дата')).toHaveValue('2026-08-07')
+
+    await user.type(screen.getByLabelText('Название'), 'Конференция')
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+
+    const added = useStore.getState().lessons.at(-1)
+    expect(added?.type).toBe('once')
+    expect(added?.date).toBe('2026-08-07')
+  })
+
   it('switches to week view', async () => {
     const user = userEvent.setup()
     renderPage()

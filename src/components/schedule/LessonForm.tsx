@@ -32,23 +32,37 @@ const DEFAULT_VALUES: LessonFormValues = {
   allDay: false,
 }
 
-export default function LessonForm({ initial, onSubmit, onCancel, onDelete }: { initial?: Lesson; onSubmit: (values: LessonFormValues) => void; onCancel: () => void; onDelete?: () => void }) {
-  const [values, setValues] = useState<LessonFormValues>(() =>
-    initial
-      ? {
-          title: initial.title,
-          weekday: initial.weekday,
-          startTime: initial.allDay ? '00:00' : initial.startTime,
-          endTime: initial.allDay ? '23:59' : initial.endTime,
-          location: initial.location ?? '',
-          note: initial.note ?? '',
-          color: initial.color ?? 'blue',
-          type: initial.type ?? 'weekly',
-          date: initial.date ?? '',
-          allDay: initial.allDay ?? false,
-        }
-      : DEFAULT_VALUES,
-  )
+export default function LessonForm({
+  initial,
+  initialDate,
+  onSubmit,
+  onCancel,
+  onDelete,
+}: {
+  initial?: Lesson
+  initialDate?: string
+  onSubmit: (values: LessonFormValues) => void
+  onCancel: () => void
+  onDelete?: () => void
+}) {
+  const [values, setValues] = useState<LessonFormValues>(() => {
+    if (initial) {
+      return {
+        title: initial.title,
+        weekday: initial.weekday,
+        startTime: initial.allDay ? '00:00' : initial.startTime,
+        endTime: initial.allDay ? '23:59' : initial.endTime,
+        location: initial.location ?? '',
+        note: initial.note ?? '',
+        color: initial.color ?? 'blue',
+        type: initial.type ?? 'weekly',
+        date: initial.date ?? '',
+        allDay: initial.allDay ?? false,
+      }
+    }
+    if (initialDate) return { ...DEFAULT_VALUES, type: 'once', date: initialDate }
+    return DEFAULT_VALUES
+  })
   // Время, к которому вернёмся при снятии флага «Весь день».
   const [timed, setTimed] = useState(() => ({
     startTime: initial?.allDay || !initial ? '09:00' : initial.startTime,
