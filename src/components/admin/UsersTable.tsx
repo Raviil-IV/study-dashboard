@@ -6,11 +6,13 @@ export default function UsersTable({
   users,
   onOpen,
   onToggleRole,
+  onChangePassword,
   onDelete,
 }: {
   users: AdminUser[]
   onOpen: (u: AdminUser) => void
   onToggleRole: (u: AdminUser) => void
+  onChangePassword: (u: AdminUser) => void
   onDelete: (u: AdminUser) => void
 }) {
   if (users.length === 0) return <p className="text-sm text-gray-500 dark:text-gray-400">Пользователей пока нет</p>
@@ -46,6 +48,9 @@ export default function UsersTable({
                 <div className="flex items-center justify-end gap-2">
                   <Button size="sm" variant="secondary" onClick={() => onOpen(u)}>
                     Открыть
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => onChangePassword(u)}>
+                    Сменить пароль
                   </Button>
                   <Button size="sm" variant="secondary" onClick={() => onToggleRole(u)}>
                     {u.role === 'admin' ? 'Снять админа' : 'Сделать админом'}

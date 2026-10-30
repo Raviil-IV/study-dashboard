@@ -3,13 +3,22 @@ import { z } from 'zod'
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Дата должна быть в формате ГГГГ-ММ-ДД')
 const hhmm = z.string().regex(/^\d{2}:\d{2}$/, 'Время должно быть в формате ЧЧ:ММ')
 
+export const passwordSchema = z
+  .string()
+  .min(6, 'Пароль должен быть не короче 6 символов')
+  .max(128, 'Пароль слишком длинный')
+
 export const registerSchema = z.object({
   login: z
     .string()
     .min(3, 'Логин должен содержать от 3 до 32 символов')
     .max(32, 'Логин должен содержать от 3 до 32 символов')
     .regex(/^[a-zA-Z0-9_-]+$/, 'Логин может содержать только латинские буквы, цифры, _ и -'),
-  password: z.string().min(6, 'Пароль должен быть не короче 6 символов').max(128, 'Пароль слишком длинный'),
+  password: passwordSchema,
+})
+
+export const adminPasswordSchema = z.object({
+  password: passwordSchema,
 })
 
 export const loginSchema = z.object({

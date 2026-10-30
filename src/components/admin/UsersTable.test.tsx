@@ -17,13 +17,13 @@ describe('UsersTable', () => {
   it('calls onToggleRole when the role button is clicked', async () => {
     const onToggleRole = vi.fn()
     const user = userEvent.setup()
-    render(<UsersTable users={users} onOpen={() => {}} onToggleRole={onToggleRole} onDelete={() => {}} />)
+    render(<UsersTable users={users} onOpen={() => {}} onToggleRole={onToggleRole} onChangePassword={() => {}} onDelete={() => {}} />)
     await user.click(screen.getAllByRole('button', { name: /Сделать админом|Снять админа/ })[0])
     expect(onToggleRole).toHaveBeenCalledWith(users[0])
   })
 
   it('shows the visit count column', () => {
-    render(<UsersTable users={users} onOpen={() => {}} onToggleRole={() => {}} onDelete={() => {}} />)
+    render(<UsersTable users={users} onOpen={() => {}} onToggleRole={() => {}} onChangePassword={() => {}} onDelete={() => {}} />)
     expect(screen.getByText('Заходов')).toBeInTheDocument()
     expect(screen.getAllByText('5')).toHaveLength(1)
   })
@@ -32,7 +32,7 @@ describe('UsersTable', () => {
     const onDelete = vi.fn()
     vi.spyOn(window, 'confirm').mockReturnValue(true)
     const user = userEvent.setup()
-    render(<UsersTable users={users} onOpen={() => {}} onToggleRole={() => {}} onDelete={onDelete} />)
+    render(<UsersTable users={users} onOpen={() => {}} onToggleRole={() => {}} onChangePassword={() => {}} onDelete={onDelete} />)
     await user.click(screen.getAllByRole('button', { name: 'Удалить' })[0])
     expect(window.confirm).toHaveBeenCalled()
     expect(onDelete).toHaveBeenCalledWith(users[0])
@@ -42,8 +42,16 @@ describe('UsersTable', () => {
     const onDelete = vi.fn()
     vi.spyOn(window, 'confirm').mockReturnValue(false)
     const user = userEvent.setup()
-    render(<UsersTable users={users} onOpen={() => {}} onToggleRole={() => {}} onDelete={onDelete} />)
+    render(<UsersTable users={users} onOpen={() => {}} onToggleRole={() => {}} onChangePassword={() => {}} onDelete={onDelete} />)
     await user.click(screen.getAllByRole('button', { name: 'Удалить' })[0])
     expect(onDelete).not.toHaveBeenCalled()
+  })
+
+  it('calls onChangePassword when the password button is clicked', async () => {
+    const onChangePassword = vi.fn()
+    const user = userEvent.setup()
+    render(<UsersTable users={users} onOpen={() => {}} onToggleRole={() => {}} onChangePassword={onChangePassword} onDelete={() => {}} />)
+    await user.click(screen.getAllByRole('button', { name: 'Сменить пароль' })[0])
+    expect(onChangePassword).toHaveBeenCalledWith(users[0])
   })
 })

@@ -129,4 +129,71 @@ describe('admin', () => {
     const r = await agent.delete('/api/admin/users/00000000-0000-0000-0000-000000000000')
     expect(r.status).toBe(403)
   })
+
+  it('changes another user password and revokes their sessions', async () => {
+    const admin = createAgent()
+    await signUp(admin, 'boss')
+    await promoteToAdmin('boss')
+    const target = createAgent()
+    const { res: reg, login, password } = await signUp(target, 'worker')
+
+    const r = await admin.patch(`/api/admin/users/${reg.body.id}/password`).send({ password: 'newpassword123' })
+    expect(r.status).toBe(204)
+
+    // Старая сессия target-пользователя отозвана
+    expect((await target.get('/api/state')).status).toBe(401)
+
+    // Старый пароль больше не подходит, новый — подходит
+    const oldLogin = createAgent()
+    expect((await oldLogin.post('/api/auth/login').send({ login, password })).status).toBe(401)
+    const newLogin = createAgent()
+    expect((await newLogin.post('/api/auth/login').send({ login, password: 'newpassword123' })).status).toBe(200)
+  })
+
+  it('keeps the admin signed in when changing their own password', async () => {
+    const admin = createAgent()
+    const { res: reg, login } = await signUp(admin, 'boss')
+    await promoteToAdmin('boss')
+
+    const r = await admin.patch(`/api/admin/users/${reg.body.id}/password`).send({ password: 'newpassword123' })
+    expect(r.status).toBe(204)
+
+    // Текущая cookie админа обновлена вместе с tokenVersion
+    expect((await admin.get('/api/admin/users')).status).toBe(200)
+
+    const newLogin = createAgent()
+    expect((await newLogin.post('/api/auth/login').send({ login, password: 'newpassword123' })).status).toBe(200)
+  })
+
+  it('rejects password change by a regular user', async () => {
+    const agent = createAgent()
+    await signUp(agent, 'regular')
+    const r = await agent
+      .patch('/api/admin/users/00000000-0000-0000-0000-000000000000/password')
+      .send({ password: 'newpassword123' })
+    expect(r.status).toBe(403)
+  })
+
+  it('returns 404 when changing the password of an unknown user', async () => {
+    const admin = createAgent()
+    await signUp(admin, 'boss')
+    await promoteToAdmin('boss')
+    const r = await admin
+      .patch('/api/admin/users/00000000-0000-0000-0000-000000000000/password')
+      .send({ password: 'newpassword123' })
+    expect(r.status).toBe(404)
+    expect(r.body.error.code).toBe('USER_NOT_FOUND')
+  })
+
+  it('rejects a too short password with 400', async () => {
+    const admin = createAgent()
+    await signUp(admin, 'boss')
+    await promoteToAdmin('boss')
+    const target = createAgent()
+    const { res: reg } = await signUp(target, 'worker')
+
+    const r = await admin.patch(`/api/admin/users/${reg.body.id}/password`).send({ password: '123' })
+    expect(r.status).toBe(400)
+    expect(r.body.error.code).toBe('VALIDATION')
+  })
 })

@@ -1,12 +1,17 @@
 import { Router } from 'express'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { count } from 'drizzle-orm'
 import { db } from '../db/client'
 import { tasks, users, visits } from '../db/schema'
 import { getGlobalStats, getTrend, getUserStats } from '../lib/stats'
-import { roleParamSchema, userIdParamSchema } from '../lib/validation'
+import { adminPasswordSchema, roleParamSchema, userIdParamSchema } from '../lib/validation'
+import { hashPassword } from '../lib/password'
+import { setAuthCookie } from '../lib/cookies'
+import { logger } from '../lib/logger'
 
 export const adminRouter = Router()
+
+const log = logger.child({ module: 'admin' })
 
 adminRouter.get('/stats', async (_req, res, next) => {
   try {
@@ -55,6 +60,31 @@ adminRouter.patch('/users/:id/role', async (req, res, next) => {
       return
     }
     res.json(updated)
+  } catch (err) {
+    next(err)
+  }
+})
+
+adminRouter.patch('/users/:id/password', async (req, res, next) => {
+  try {
+    const { id } = userIdParamSchema.parse(req.params)
+    const { password } = adminPasswordSchema.parse(req.body)
+    const passwordHash = await hashPassword(password)
+    const [updated] = await db
+      .update(users)
+      .set({ passwordHash, tokenVersion: sql`${users.tokenVersion} + 1` })
+      .where(eq(users.id, id))
+      .returning({ id: users.id, tokenVersion: users.tokenVersion })
+    if (!updated) {
+      res.status(404).json({ error: { code: 'USER_NOT_FOUND', message: 'Пользователь не найден' } })
+      return
+    }
+    // Смена своего пароля не должна выкидывать админа из текущей сессии
+    if (id === req.userId) {
+      setAuthCookie(res, id, updated.tokenVersion)
+    }
+    log.info({ userId: req.userId, targetId: id }, 'password changed by admin')
+    res.status(204).end()
   } catch (err) {
     next(err)
   }

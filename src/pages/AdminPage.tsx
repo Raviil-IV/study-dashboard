@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api, ApiError } from '../lib/api'
-import { notifyError } from '../lib/toast'
+import { notifyError, useToast } from '../lib/toast'
 import PageHeader from '../components/ui/PageHeader'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
@@ -9,6 +9,7 @@ import ActivityChart from '../components/admin/ActivityChart'
 import StatsCards from '../components/admin/StatsCards'
 import UsersTable from '../components/admin/UsersTable'
 import UserStats from '../components/admin/UserStats'
+import ChangePasswordModal from '../components/admin/ChangePasswordModal'
 import type { AdminStats, AdminUser, AdminUserStats } from '../types/admin'
 
 type Tab = 'overview' | 'users'
@@ -19,6 +20,7 @@ export default function AdminPage() {
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [users, setUsers] = useState<AdminUser[]>([])
   const [selected, setSelected] = useState<AdminUserStats | null>(null)
+  const [passwordUser, setPasswordUser] = useState<AdminUser | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -71,9 +73,19 @@ export default function AdminPage() {
     }
   }
 
+  const changePassword = async (u: AdminUser, password: string) => {
+    try {
+      await api.patch(`/admin/users/${u.id}/password`, { password })
+      setPasswordUser(null)
+      useToast.getState().show('Пароль обновлён')
+    } catch (err) {
+      notifyError(err)
+    }
+  }
+
   return (
     <div>
-      <PageHeader title="Админ-панель" subtitle="Статистика платформы и управление ролями" />
+      <PageHeader title="Админ-панель" subtitle="Статистика платформы и управление пользователями" />
       {error && (
         <div className="mb-4 flex items-center justify-between gap-2">
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -105,8 +117,15 @@ export default function AdminPage() {
         </div>
       ) : (
         <Card>
-          <UsersTable users={users} onOpen={(u) => void openUser(u)} onToggleRole={(u) => void toggleRole(u)} onDelete={(u) => void deleteUser(u)} />
+          <UsersTable users={users} onOpen={(u) => void openUser(u)} onToggleRole={(u) => void toggleRole(u)} onChangePassword={setPasswordUser} onDelete={(u) => void deleteUser(u)} />
         </Card>
+      )}
+      {passwordUser && (
+        <ChangePasswordModal
+          user={passwordUser}
+          onClose={() => setPasswordUser(null)}
+          onSubmit={(password) => changePassword(passwordUser, password)}
+        />
       )}
     </div>
   )

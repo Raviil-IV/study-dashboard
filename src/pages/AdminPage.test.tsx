@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import AdminPage from './AdminPage'
@@ -80,5 +80,19 @@ describe('AdminPage', () => {
     expect(screen.queryByText('student')).not.toBeInTheDocument()
     expect(screen.getByText('boss')).toBeInTheDocument()
     vi.restoreAllMocks()
+  })
+
+  it('changes a user password through the modal', async () => {
+    vi.mocked(api.patch).mockResolvedValueOnce(undefined)
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: 'Пользователи' }))
+    await user.click(screen.getAllByRole('button', { name: 'Сменить пароль' })[1])
+    await user.type(screen.getByLabelText('Новый пароль'), 'newpassword123')
+    await user.type(screen.getByLabelText('Повторите пароль'), 'newpassword123')
+    await user.click(screen.getByRole('button', { name: 'Сохранить' }))
+
+    await waitFor(() => expect(api.patch).toHaveBeenCalledWith('/admin/users/u2/password', { password: 'newpassword123' }))
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 })
